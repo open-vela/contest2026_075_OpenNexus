@@ -63,6 +63,7 @@ static void print_usage(void)
     "  stage_done              simulate current stage finished\n"
     "  cancel                  abandon session\n"
     "  status                  print current state\n"
+    "  agent                   show ai_agent connection status\n"
     "  save / restore          save / load session\n"
     "  help                    this message\n"
     "  quit                    exit FocusMate\n");
@@ -73,8 +74,16 @@ static void cmd_goal(const char *text, int minutes)
   if (minutes <= 0) {
     minutes = 45;
   }
-  /* Let the agent (or local fallback) build the plan immediately. */
+  /* M4: focus_agent_plan() tries the AI focus-planner skill first,
+   * falls back to a local default plan when offline/invalid. */
+  printf("[FocusMate] planning goal: %s (%d min)...\n", text, minutes);
   focus_agent_plan(&g_session, text, minutes);
+  printf("[FocusMate] plan ready: %d stages, %d min total\n",
+         g_session.stage_count, g_session.total_minutes);
+  for (int i = 0; i < g_session.stage_count; i++) {
+    printf("  [%d/%d] %s (%d min)\n", i + 1, g_session.stage_count,
+           g_session.stages[i].title, g_session.stages[i].minutes);
+  }
   fm_state_handle_event(&g_session, FM_EVT_GOAL_SUBMITTED);
   fm_state_handle_event(&g_session, FM_EVT_PLAN_READY);
 }
@@ -128,6 +137,9 @@ int main(int argc, char *argv[])
              fm_state_name(g_session.state), g_session.goal,
              g_session.current_stage + 1, g_session.stage_count,
              g_session.elapsed_seconds, g_session.interrupt_count);
+    } else if (strcmp(cmd, "agent") == 0) {
+      printf("ai_agent connected: %s\n",
+             focus_agent_is_connected() ? "yes" : "no");
     } else if (strcmp(cmd, "goal") == 0) {
       char *text = strtok(NULL, " ");
       char *minstr = strtok(NULL, " ");

@@ -1,6 +1,6 @@
 # Contest 2026 team 075 - FocusMate
 #
-# FocusMate (AI 桌面专注伙伴) - M3 application skeleton.
+# FocusMate (AI 桌面专注伙伴) - M4: focus-planner skill integration.
 
 if(CONFIG_LVX_USE_DEMO_FOCUSMATE)
   nuttx_add_application(
@@ -15,7 +15,9 @@ if(CONFIG_LVX_USE_DEMO_FOCUSMATE)
       ui/focus_ui.c
     INCLUDE_DIRECTORIES
       ${CMAKE_CURRENT_SOURCE_DIR}
-    STACKSIZE 8192
+      ${NUTTX_APPS_DIR}/netutils/cjson/cJSON
+      ${NUTTX_APPS_DIR}/packages/ai_agent/include
+    STACKSIZE 16384
     PRIORITY 100
   )
 endif()
