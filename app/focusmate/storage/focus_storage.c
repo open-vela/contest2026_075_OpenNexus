@@ -36,6 +36,7 @@ int focus_storage_save(const fm_session_t *sess)
   fprintf(fp, "stage_count=%d\n", sess->stage_count);
   fprintf(fp, "current_stage=%d\n", sess->current_stage);
   fprintf(fp, "elapsed_seconds=%d\n", sess->elapsed_seconds);
+  fprintf(fp, "stage_elapsed_seconds=%d\n", sess->stage_elapsed_seconds);
   fprintf(fp, "interrupt_count=%d\n", sess->interrupt_count);
   for (int i = 0; i < sess->stage_count && i < FM_MAX_STAGES; i++) {
     fprintf(fp, "stage_%d_title=%s\n", i, sess->stages[i].title);
@@ -75,6 +76,8 @@ int focus_storage_load(fm_session_t *sess)
       sess->current_stage = atoi(val);
     } else if (strcmp(key, "elapsed_seconds") == 0) {
       sess->elapsed_seconds = atoi(val);
+    } else if (strcmp(key, "stage_elapsed_seconds") == 0) {
+      sess->stage_elapsed_seconds = atoi(val);
     } else if (strcmp(key, "interrupt_count") == 0) {
       sess->interrupt_count = atoi(val);
     } else if (strncmp(key, "stage_", 6) == 0) {

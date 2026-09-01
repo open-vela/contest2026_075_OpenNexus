@@ -51,6 +51,37 @@ static void on_enter_state(fm_session_t *sess, fm_event_t evt)
   }
 }
 
+/* Called once per second by the timer while FOCUSING (M5).
+ * Uses \r so the countdown overwrites itself on the same line,
+ * keeping the CLI readable between commands. */
+static void on_tick(void)
+{
+  int stage_total, remain, pct;
+
+  if (g_session.state != FM_FOCUSING) {
+    return;
+  }
+  if (g_session.current_stage >= 0 &&
+      g_session.current_stage < g_session.stage_count) {
+    stage_total = g_session.stages[g_session.current_stage].minutes * 60;
+    remain = stage_total - g_session.stage_elapsed_seconds;
+    pct = stage_total > 0
+              ? (g_session.stage_elapsed_seconds * 100) / stage_total
+              : 0;
+    if (remain < 0) {
+      remain = 0;
+    }
+    if (pct > 100) {
+      pct = 100;
+    }
+    printf("\r[FocusMate] [%d/%d] %s  剩余 %02d:%02d  进度 %d%%   ",
+           g_session.current_stage + 1, g_session.stage_count,
+           g_session.stages[g_session.current_stage].title,
+           remain / 60, remain % 60, pct);
+  }
+  fflush(stdout);
+}
+
 static void print_usage(void)
 {
   printf(
@@ -98,6 +129,8 @@ int main(int argc, char *argv[])
 
   fm_state_set_hooks(on_transition, on_enter_state);
   fm_state_init(&g_session);
+  focus_timer_bind(&g_session);
+  focus_timer_set_tick_cb(on_tick);
 
   /* Try to restore an unfinished session. */
   if (focus_storage_load(&g_session) == 0 && g_session.stage_count > 0) {
@@ -133,10 +166,11 @@ int main(int argc, char *argv[])
     } else if (strcmp(cmd, "help") == 0) {
       print_usage();
     } else if (strcmp(cmd, "status") == 0) {
-      printf("state=%s goal='%s' stage=%d/%d elapsed=%d interrupts=%d\n",
+      printf("state=%s goal='%s' stage=%d/%d elapsed=%d stage_sec=%d interrupts=%d\n",
              fm_state_name(g_session.state), g_session.goal,
              g_session.current_stage + 1, g_session.stage_count,
-             g_session.elapsed_seconds, g_session.interrupt_count);
+             g_session.elapsed_seconds, g_session.stage_elapsed_seconds,
+             g_session.interrupt_count);
     } else if (strcmp(cmd, "agent") == 0) {
       printf("ai_agent connected: %s\n",
              focus_agent_is_connected() ? "yes" : "no");

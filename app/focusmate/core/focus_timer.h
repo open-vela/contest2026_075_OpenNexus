@@ -26,6 +26,12 @@ void focus_timer_stop(void);
 /* True if the ticker is running. */
 bool focus_timer_is_running(void);
 
+/* Bind the session the ticker updates (call once at startup). */
+void focus_timer_bind(fm_session_t *sess);
+
+/* Register a per-second callback (UI refresh etc.). */
+void focus_timer_set_tick_cb(void (*cb)(void));
+
 /*
  * Called once per second while FOCUSING. Returns the number of
  * seconds elapsed in the current stage. When a stage's budget is

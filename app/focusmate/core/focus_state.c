@@ -68,6 +68,7 @@ void fm_state_init(fm_session_t *sess)
   sess->state = FM_IDLE;
   sess->stage_count = 0;
   sess->current_stage = -1;
+  sess->stage_elapsed_seconds = 0;
 }
 
 bool fm_state_is_active(fm_state_t state)
@@ -80,6 +81,7 @@ static fm_state_t advance_stage(fm_session_t *sess)
 {
   if (sess->current_stage + 1 < sess->stage_count) {
     sess->current_stage++;
+    sess->stage_elapsed_seconds = 0; /* fresh budget for the new stage */
     return FM_FOCUSING;
   }
   return FM_COMPLETED;
@@ -117,6 +119,7 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
       if (sess->current_stage < 0) {
         sess->current_stage = 0;
       }
+      sess->stage_elapsed_seconds = 0;
       next = FM_FOCUSING;
     } else if (evt == FM_EVT_CANCEL) {
       next = FM_IDLE;

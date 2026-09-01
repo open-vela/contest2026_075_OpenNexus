@@ -65,7 +65,8 @@ typedef struct {
   int stage_count;
   int current_stage;         /* 0-based index */
   fm_stage_t stages[FM_MAX_STAGES];
-  int elapsed_seconds;       /* focused seconds accumulated */
+  int elapsed_seconds;       /* focused seconds accumulated (all stages) */
+  int stage_elapsed_seconds; /* seconds spent in the current stage */
   int interrupt_count;
   fm_state_t state;
 } fm_session_t;

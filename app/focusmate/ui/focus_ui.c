@@ -61,10 +61,23 @@ static void ui_set_labels(const fm_session_t *sess)
   case FM_INTERRUPTED:
   case FM_RECOVERING:
     if (sess->current_stage >= 0 && sess->current_stage < sess->stage_count) {
+      int stage_total = sess->stages[sess->current_stage].minutes * 60;
+      int remain = stage_total - sess->stage_elapsed_seconds;
+      int pct = 0;
+      if (remain < 0) {
+        remain = 0;
+      }
+      if (stage_total > 0) {
+        pct = (sess->stage_elapsed_seconds * 100) / stage_total;
+        if (pct > 100) {
+          pct = 100;
+        }
+      }
       snprintf(buf, sizeof(buf),
-               "阶段 %d/%d\n%s\n已专注 %d 秒\n中断 %d 次",
+               "阶段 %d/%d\n%s\n剩余 %02d:%02d\n进度 %d%%\n已专注 %d 秒 / 中断 %d 次",
                sess->current_stage + 1, sess->stage_count,
                sess->stages[sess->current_stage].title,
+               remain / 60, remain % 60, pct,
                sess->elapsed_seconds, sess->interrupt_count);
     } else {
       snprintf(buf, sizeof(buf), "已专注 %d 秒\n中断 %d 次",
