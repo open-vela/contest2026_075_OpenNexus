@@ -58,8 +58,6 @@ static void ui_set_labels(const fm_session_t *sess)
     break;
   case FM_FOCUSING:
   case FM_PAUSED:
-  case FM_INTERRUPTED:
-  case FM_RECOVERING:
     if (sess->current_stage >= 0 && sess->current_stage < sess->stage_count) {
       int stage_total = sess->stages[sess->current_stage].minutes * 60;
       int remain = stage_total - sess->stage_elapsed_seconds;
@@ -82,6 +80,32 @@ static void ui_set_labels(const fm_session_t *sess)
     } else {
       snprintf(buf, sizeof(buf), "已专注 %d 秒\n中断 %d 次",
                sess->elapsed_seconds, sess->interrupt_count);
+    }
+    lv_label_set_text(s_info_label, buf);
+    break;
+
+  case FM_INTERRUPTED:
+    /* Active scene: phone removed -> device auto-paused. */
+    if (sess->current_stage >= 0 && sess->current_stage < sess->stage_count) {
+      snprintf(buf, sizeof(buf),
+               "手机被取走\n专注已自动暂停\n任务: %s\n已保存进度\n中断 %d 次",
+               sess->stages[sess->current_stage].title,
+               sess->interrupt_count);
+    } else {
+      snprintf(buf, sizeof(buf), "手机被取走\n专注已自动暂停\n中断 %d 次",
+               sess->interrupt_count);
+    }
+    lv_label_set_text(s_info_label, buf);
+    break;
+
+  case FM_RECOVERING:
+    /* Active scene: phone returned -> proactively ask to resume. */
+    if (sess->current_stage >= 0 && sess->current_stage < sess->stage_count) {
+      snprintf(buf, sizeof(buf),
+               "欢迎回来！手机已放回\n刚才正在: %s\n是否继续？",
+               sess->stages[sess->current_stage].title);
+    } else {
+      snprintf(buf, sizeof(buf), "欢迎回来！手机已放回\n是否继续？");
     }
     lv_label_set_text(s_info_label, buf);
     break;

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "core/focus_state.h"
 #include "core/focus_timer.h"
@@ -34,7 +35,7 @@ static void on_transition(fm_session_t *sess, fm_event_t evt)
 static void on_enter_state(fm_session_t *sess, fm_event_t evt)
 {
   (void)evt;
-  printf("[FocusMate] state -> %s\n", fm_state_name(sess->state));
+  printf("\n[FocusMate] state -> %s\n", fm_state_name(sess->state));
 
   if (sess->state == FM_FOCUSING) {
     focus_timer_start();
@@ -44,10 +45,40 @@ static void on_enter_state(fm_session_t *sess, fm_event_t evt)
     focus_timer_stop();
   }
 
-  if (sess->state == FM_COMPLETED) {
+  switch (sess->state) {
+  case FM_INTERRUPTED:
+    /* Active scene: the device sensed the phone was taken away and
+     * auto-paused — the user said nothing. */
+    if (sess->current_stage >= 0 && sess->current_stage < sess->stage_count) {
+      printf("[FocusMate] !!! 检测到手机被取走，专注已自动暂停 !!!\n");
+      printf("[FocusMate]     当前任务: %s (第 %d/%d 阶段)\n",
+             sess->stages[sess->current_stage].title,
+             sess->current_stage + 1, sess->stage_count);
+      printf("[FocusMate]     已保存进度，中断次数 +1 (%d)\n",
+             sess->interrupt_count);
+    }
+    break;
+
+  case FM_RECOVERING:
+    /* Active scene: phone put back — proactively ask to resume. */
+    if (sess->current_stage >= 0 && sess->current_stage < sess->stage_count) {
+      printf("[FocusMate] 欢迎回来！手机已放回。\n");
+      printf("[FocusMate]     刚才正在: %s (第 %d/%d 阶段)\n",
+             sess->stages[sess->current_stage].title,
+             sess->current_stage + 1, sess->stage_count);
+      printf("[FocusMate]     是否继续？输入 resume 继续，cancel 放弃。\n");
+    }
+    break;
+
+  case FM_COMPLETED: {
     char summary[256];
     focus_agent_summarize(sess, summary, sizeof(summary));
     printf("[FocusMate] %s\n", summary);
+    break;
+  }
+
+  default:
+    break;
   }
 }
 
@@ -95,9 +126,45 @@ static void print_usage(void)
     "  cancel                  abandon session\n"
     "  status                  print current state\n"
     "  agent                   show ai_agent connection status\n"
+    "  demo                    run core active-scene demo\n"
     "  save / restore          save / load session\n"
     "  help                    this message\n"
     "  quit                    exit FocusMate\n");
+}
+
+/* Forward declarations */
+static void cmd_goal(const char *text, int minutes);
+
+/* M6: core active scene - user says nothing, device senses the phone
+ * being taken away, auto-pauses, and on return proactively asks to
+ * resume. This is the "主动 + 执行" scenario the contest requires. */
+static void cmd_demo(void)
+{
+  printf("\n===== FocusMate 主动场景演示 =====\n");
+  printf("[1] 用户放置手机，开始专注...\n");
+  if (g_session.state != FM_READY) {
+    if (g_session.state != FM_IDLE) {
+      fm_state_handle_event(&g_session, FM_EVT_CANCEL);
+    }
+    cmd_goal("完成比赛演示 3", 3);
+  }
+  fm_state_handle_event(&g_session, FM_EVT_START);
+  printf("    (专注进行中...)\n");
+  sleep(3);
+
+  printf("\n[2] 用户不说话，直接取走手机 → 设备感知并自动暂停\n");
+  phone_sensor_mock_removed(&g_session);
+  sleep(2);
+
+  printf("\n[3] 用户放回手机 → 设备主动提示恢复\n");
+  phone_sensor_mock_returned(&g_session);
+  sleep(2);
+
+  printf("\n[4] 用户确认恢复 → 从原阶段继续专注\n");
+  fm_state_handle_event(&g_session, FM_EVT_RESUME);
+  sleep(2);
+  fm_state_handle_event(&g_session, FM_EVT_CANCEL);
+  printf("===== 演示结束 =====\n");
 }
 
 static void cmd_goal(const char *text, int minutes)
@@ -105,6 +172,14 @@ static void cmd_goal(const char *text, int minutes)
   if (minutes <= 0) {
     minutes = 45;
   }
+  /* A fresh goal starts a fresh session: reset counters from any
+   * previous (possibly interrupted) session. */
+  g_session.interrupt_count = 0;
+  g_session.elapsed_seconds = 0;
+  g_session.stage_elapsed_seconds = 0;
+  g_session.current_stage = -1;
+  g_session.state = FM_IDLE;
+
   /* M4: focus_agent_plan() tries the AI focus-planner skill first,
    * falls back to a local default plan when offline/invalid. */
   printf("[FocusMate] planning goal: %s (%d min)...\n", text, minutes);
@@ -174,6 +249,8 @@ int main(int argc, char *argv[])
     } else if (strcmp(cmd, "agent") == 0) {
       printf("ai_agent connected: %s\n",
              focus_agent_is_connected() ? "yes" : "no");
+    } else if (strcmp(cmd, "demo") == 0) {
+      cmd_demo();
     } else if (strcmp(cmd, "goal") == 0) {
       char *text = strtok(NULL, " ");
       char *minstr = strtok(NULL, " ");
