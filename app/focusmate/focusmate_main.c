@@ -74,6 +74,10 @@ static void on_enter_state(fm_session_t *sess, fm_event_t evt)
     char summary[256];
     focus_agent_summarize(sess, summary, sizeof(summary));
     printf("[FocusMate] %s\n", summary);
+    /* M8: archive the finished session, then clear the current one so a
+     * restart does not offer to resume an already-finished task. */
+    focus_storage_append_history(sess);
+    focus_storage_clear();
     break;
   }
 
@@ -207,10 +211,19 @@ int main(int argc, char *argv[])
   focus_timer_bind(&g_session);
   focus_timer_set_tick_cb(on_tick);
 
-  /* Try to restore an unfinished session. */
+  /* M8: try to restore an unfinished session saved across restarts. */
   if (focus_storage_load(&g_session) == 0 && g_session.stage_count > 0) {
-    printf("[FocusMate] restored session: %s\n",
-           g_session.goal[0] ? g_session.goal : "(no goal)");
+    printf("\n[FocusMate] 检测到上一次专注任务尚未完成！\n");
+    printf("[FocusMate]     目标: %s\n",
+           g_session.goal[0] ? g_session.goal : "(无目标)");
+    if (g_session.current_stage >= 0 &&
+        g_session.current_stage < g_session.stage_count) {
+      printf("[FocusMate]     进行到: %s (第 %d/%d 阶段)，已专注 %d 秒\n",
+             g_session.stages[g_session.current_stage].title,
+             g_session.current_stage + 1, g_session.stage_count,
+             g_session.elapsed_seconds);
+    }
+    printf("[FocusMate]     输入 resume 继续，cancel 放弃。\n");
     fm_state_handle_event(&g_session, FM_EVT_RESTORE);
   } else {
     fm_state_init(&g_session);

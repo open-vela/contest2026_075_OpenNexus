@@ -26,6 +26,9 @@ int focus_storage_load(fm_session_t *sess);
 /* Remove the saved session. */
 int focus_storage_clear(void);
 
+/* Append a completed session to the history file. Returns 0 on success. */
+int focus_storage_append_history(const fm_session_t *sess);
+
 #ifdef __cplusplus
 }
 #endif
