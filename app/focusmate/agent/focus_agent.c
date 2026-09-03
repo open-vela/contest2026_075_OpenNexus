@@ -1,7 +1,7 @@
 /****************************************************************************
  * app/focusmate/agent/focus_agent.c
  *
- * FocusMate <-> ai_agent bridge (M4).
+ * FocusMate <-> ai_agent bridge (M4/M9).
  *
  * flow:
  *   1. focus_agent_init() opens a velaclaw client to ai_agent.
@@ -12,6 +12,10 @@
  *      focus_agent_plan() falls back to a local default plan.
  *
  * The plan is validated: 2..FM_MAX_STAGES stages, minutes sum == total.
+ *
+ * Build modes:
+ *   - CONFIG_EXAMPLES_AI_AGENT_VELA: full velaclaw bridge to ai_agent.
+ *   - otherwise: offline mode; always uses the local fallback plan.
  ****************************************************************************/
 
 #include "focus_agent.h"
@@ -23,12 +27,18 @@
 #include <unistd.h>
 
 #include <netutils/cJSON.h>
+
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
+#include <nuttx/sched.h>
 #include <velaclaw/client.h>
+#endif
 
 #define TAG "focus_agent"
 
 #define PLAN_TIMEOUT_MS 20000
 #define PLAN_REPLY_MAX 4096
+
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
 
 /* ── velaclaw client state ─────────────────────────────────────── */
 
@@ -81,8 +91,6 @@ static void ask_cb(int status, const char *text, void *cookie)
 }
 
 /* ── ai_agent process detection ────────────────────────────────── */
-
-#include <nuttx/sched.h>
 
 typedef struct {
   bool found;
@@ -144,6 +152,23 @@ bool focus_agent_is_connected(void)
 {
   return s_connected && s_client != NULL;
 }
+
+#endif /* CONFIG_EXAMPLES_AI_AGENT_VELA */
+
+/* ── Offline-mode stubs (no CONFIG_EXAMPLES_AI_AGENT_VELA) ─────── */
+
+#ifndef CONFIG_EXAMPLES_AI_AGENT_VELA
+int focus_agent_init(void)
+{
+  syslog(LOG_INFO, "[%s] offline build (no ai_agent)\n", TAG);
+  return 0;
+}
+
+bool focus_agent_is_connected(void)
+{
+  return false; /* no ai_agent: always use local fallback */
+}
+#endif /* CONFIG_EXAMPLES_AI_AGENT_VELA */
 
 /* ── JSON plan parsing (cJSON) ─────────────────────────────────── */
 
@@ -260,6 +285,7 @@ static int local_default_plan(fm_session_t *sess, const char *goal,
 
 int focus_agent_plan(fm_session_t *sess, const char *goal, int total_minutes)
 {
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
   char prompt[512];
   int ret;
 
@@ -301,12 +327,14 @@ int focus_agent_plan(fm_session_t *sess, const char *goal, int total_minutes)
       syslog(LOG_WARNING, "[%s] AI plan invalid/missing, falling back\n", TAG);
     }
   }
+#endif /* CONFIG_EXAMPLES_AI_AGENT_VELA */
 
   return local_default_plan(sess, goal, total_minutes);
 }
 
 int focus_agent_summarize(const fm_session_t *sess, char *out, int out_size)
 {
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
   char prompt[512];
   int ret;
 
@@ -343,6 +371,7 @@ int focus_agent_summarize(const fm_session_t *sess, char *out, int out_size)
       }
     }
   }
+#endif /* CONFIG_EXAMPLES_AI_AGENT_VELA */
 
   snprintf(out, out_size, "专注完成：%s，计划 %d 分钟，中断 %d 次，继续保持！",
            sess->goal, sess->total_minutes, sess->interrupt_count);
