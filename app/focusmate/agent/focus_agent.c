@@ -258,9 +258,9 @@ static int local_default_plan(fm_session_t *sess, const char *goal,
     n = FM_MAX_STAGES;
   }
   const char *default_titles[FM_MAX_STAGES] = {
-    "整理需求与思路",
-    "执行主要工作",
-    "检查与收尾"
+    "整理思路",
+    "主要工作",
+    "完成整理"
   };
   int base = total_minutes / n;
   int rem = total_minutes % n;

@@ -84,6 +84,9 @@ static void on_enter_state(fm_session_t *sess, fm_event_t evt)
   default:
     break;
   }
+
+  /* Keep the on-screen UI in step with every state change. */
+  focus_ui_refresh(sess);
 }
 
 /* Called once per second by the timer while FOCUSING (M5).
@@ -115,6 +118,9 @@ static void on_tick(void)
            remain / 60, remain % 60, pct);
   }
   fflush(stdout);
+
+  /* Push the same countdown onto the AMOLED once per second. */
+  focus_ui_refresh(&g_session);
 }
 
 static void print_usage(void)
@@ -206,6 +212,12 @@ int main(int argc, char *argv[])
   phone_sensor_init();
   focus_agent_init();
 
+  /* Bring up the AMOLED UI.  A missing display only downgrades FocusMate
+   * to the CLI; it never aborts the session. */
+  if (focus_ui_init() < 0) {
+    printf("[FocusMate] 显示屏不可用，仅使用命令行界面\n");
+  }
+
   fm_state_set_hooks(on_transition, on_enter_state);
   fm_state_init(&g_session);
   focus_timer_bind(&g_session);
@@ -230,6 +242,7 @@ int main(int argc, char *argv[])
   }
 
   printf("[FocusMate] state -> %s\n", fm_state_name(g_session.state));
+  focus_ui_refresh(&g_session);
   print_usage();
 
   char line[256];
@@ -301,6 +314,7 @@ int main(int argc, char *argv[])
     }
   }
 
+  focus_ui_deinit();
   printf("FocusMate exiting\n");
   return 0;
 }

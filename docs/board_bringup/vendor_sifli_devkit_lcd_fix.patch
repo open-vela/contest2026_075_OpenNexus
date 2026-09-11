@@ -1,5 +1,5 @@
 diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig b/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
-index b560a94..9bebb2d 100644
+index b560a94..b5732df 100644
 --- a/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
 +++ b/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
 @@ -91,7 +91,6 @@ CONFIG_EXAMPLES_BUTTONS_QTD=1
@@ -10,7 +10,15 @@ index b560a94..9bebb2d 100644
  CONFIG_EXAMPLES_LVGLDEMO=y
  CONFIG_EXAMPLES_PWM=y
  CONFIG_EXAMPLES_TIMER=y
-@@ -150,7 +149,6 @@ CONFIG_SCHED_HPWORK=y
+@@ -105,6 +104,7 @@ CONFIG_FS_PROCFS=y
+ CONFIG_FS_ROMFS=y
+ CONFIG_FS_TMPFS=y
+ CONFIG_GRAPHICS_LVGL=y
++CONFIG_I2C=y
+ CONFIG_I2C_BITBANG=y
+ CONFIG_I2C_SLAVE=y
+ CONFIG_IDLETHREAD_STACKSIZE=16096
+@@ -150,7 +150,6 @@ CONFIG_SCHED_HPWORK=y
  CONFIG_SCHED_LPWORK=y
  CONFIG_SCHED_WAITPID=y
  CONFIG_SENSORS=y
@@ -18,7 +26,7 @@ index b560a94..9bebb2d 100644
  CONFIG_SF32LB52_USBDEV=y
  CONFIG_SIFLI_LCD=y
  CONFIG_SIG_EVTHREAD=y
-@@ -177,3 +175,10 @@ CONFIG_UART_SERIAL_CONSOLE=y
+@@ -177,3 +176,11 @@ CONFIG_UART_SERIAL_CONSOLE=y
  CONFIG_UNQLITE=y
  CONFIG_VIDEO_FB=y
  CONFIG_WATCHDOG=y
@@ -29,6 +37,7 @@ index b560a94..9bebb2d 100644
 +CONFIG_NETUTILS_CJSON=y
 +CONFIG_LV_FONT_MONTSERRAT_20=y
 +CONFIG_LV_FONT_MONTSERRAT_32=y
++CONFIG_LV_FONT_SIMSUN_16_CJK=y
 diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
 index 32be34b..7c112bc 100644
 --- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c

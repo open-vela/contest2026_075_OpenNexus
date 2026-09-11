@@ -19,6 +19,14 @@ config FOCUSMATE_DATA_DIR
 	string "FocusMate data directory"
 	default "/data/focusmate"
 
+config FOCUSMATE_LCD_DEVPATH
+	string "FocusMate LCD device path"
+	default "/dev/lcd0"
+
+config FOCUSMATE_INPUT_DEVPATH
+	string "FocusMate touchscreen device path"
+	default "/dev/input0"
+
 config FOCUSMATE_ENABLE_UI
 	bool "Enable LVGL UI"
 	default y
