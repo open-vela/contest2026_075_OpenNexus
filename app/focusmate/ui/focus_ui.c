@@ -371,6 +371,14 @@ static void ui_build(void)
 {
   lv_obj_t *scr = lv_scr_act();
 
+  /* Never draw without a screen: lv_scr_act() returns NULL when no display is
+   * registered, and every lv_obj_* call below would dereference it. */
+  if (scr == NULL)
+    {
+      syslog(LOG_ERR, "[focus_ui] no active screen; UI not built\n");
+      return;
+    }
+
   lv_obj_set_style_bg_color(scr, lv_color_hex(0x101418), 0);
 
   s_title_label = lv_label_create(scr);
@@ -665,11 +673,20 @@ int focus_ui_init(void)
 
   if (!s_ready)
     {
+      /* NuttX runs everything in one flat address space, so a previous run of
+       * this app leaves LVGL's globals behind - lv_initialized among them.
+       * lv_is_initialized() therefore reports "yes" after a restart even
+       * though no display is registered, and trusting it made ui_build() run
+       * against a NULL screen and trip the style assert.  What actually
+       * matters is having a display, so decide on that instead. */
       if (!lv_is_initialized())
         {
-          memset(&res, 0, sizeof(res));
-
           lv_init();
+        }
+
+      if (lv_display_get_default() == NULL)
+        {
+          memset(&res, 0, sizeof(res));
 
           lv_nuttx_dsc_init(&dsc);
           dsc.fb_path = CONFIG_FOCUSMATE_LCD_DEVPATH;
@@ -690,6 +707,17 @@ int focus_ui_init(void)
           syslog(LOG_INFO, "[focus_ui] %s ready, touch %s\n",
                  CONFIG_FOCUSMATE_LCD_DEVPATH,
                  s_touch_ok ? "ready" : "absent (read-only UI)");
+        }
+      else
+        {
+          syslog(LOG_INFO, "[focus_ui] reusing the display from a previous run\n");
+        }
+
+      if (lv_scr_act() == NULL)
+        {
+          syslog(LOG_ERR, "[focus_ui] no screen available; UI skipped\n");
+          pthread_mutex_unlock(&s_lock);
+          return -ENODEV;
         }
 
       ui_build();

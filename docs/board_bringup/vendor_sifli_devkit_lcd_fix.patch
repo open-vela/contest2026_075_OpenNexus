@@ -114,6 +114,13 @@ index b560a94..ca1758d 100644
 +CONFIG_LV_FONT_MONTSERRAT_32=y
 +CONFIG_LV_FONT_MONTSERRAT_40=y
 +CONFIG_LV_FONT_SIMSUN_16_CJK=y
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS b/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
+index e69de29..40814a6 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
+@@ -0,0 +1,2 @@
++sleep 3
++focusmate -d &
 diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
 index 32be34b..7c112bc 100644
 --- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c

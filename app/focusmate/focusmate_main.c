@@ -225,9 +225,55 @@ static void cmd_goal(const char *text, int minutes)
   fm_state_handle_event(&g_session, FM_EVT_PLAN_READY);
 }
 
+/* Apply an input command (screen button or board key) to the session.
+ * Kept in one place so the interactive CLI loop and the autostart loop cannot
+ * drift apart. */
+
+static void apply_ui_command(fm_ui_cmd_t ucmd)
+{
+  printf("\n[FocusMate] input: %s\n", ui_cmd_name(ucmd));
+  fflush(stdout);
+
+  switch (ucmd) {
+  case FM_UI_CMD_START:
+    fm_state_handle_event(&g_session, FM_EVT_START);
+    break;
+  case FM_UI_CMD_PAUSE:
+    fm_state_handle_event(&g_session, FM_EVT_PAUSE);
+    break;
+  case FM_UI_CMD_RESUME:
+    fm_state_handle_event(&g_session, FM_EVT_RESUME);
+    break;
+  case FM_UI_CMD_CANCEL:
+    fm_state_handle_event(&g_session, FM_EVT_CANCEL);
+    focus_storage_clear();
+    break;
+  case FM_UI_CMD_QUICKSTART:
+    /* No session is planned (fresh boot, or right after a long press
+     * cancelled one), so start a default one rather than doing nothing.
+     * This is what makes the key work in every state. */
+    cmd_goal("专注", 25);
+    fm_state_handle_event(&g_session, FM_EVT_START);
+    break;
+  default:
+    break;
+  }
+}
+
 int main(int argc, char *argv[])
 {
-  printf("FocusMate starting (M3 skeleton)\n");
+  int no_cli = 0;
+  int i;
+
+  /* Started from /etc/init.d/rcS at boot: keep driving the panel and the key,
+   * but leave stdin alone so NSH on the console stays usable. */
+  for (i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--no-cli") == 0) {
+      no_cli = 1;
+    }
+  }
+
+  printf("FocusMate starting%s\n", no_cli ? " (autostart)" : "");
 
   focus_storage_init();
   phone_sensor_init();
@@ -264,43 +310,33 @@ int main(int argc, char *argv[])
 
   printf("[FocusMate] state -> %s\n", fm_state_name(g_session.state));
   focus_ui_refresh(&g_session);
+
+  if (no_cli) {
+    /* Autostart: drive the panel and the board key only, leaving stdin to
+     * NSH so the serial console stays usable for debugging. */
+    printf("[FocusMate] autostart: use the board key (KEY2).\n");
+    while (1) {
+      fm_ui_cmd_t ucmd = focus_ui_take_command();
+
+      if (ucmd != FM_UI_CMD_NONE) {
+        apply_ui_command(ucmd);
+      }
+      usleep(100000);
+    }
+  }
+
   print_usage();
 
   char line[256];
   while (1) {
     fm_ui_cmd_t ucmd;
 
-    /* A tap on the panel.  The button callback only leaves a request behind;
-     * the state machine is driven from here so that every transition and
-     * every storage write stays on this one thread. */
+    /* A tap on the panel or a press of the board key.  The callback only
+     * leaves a request behind; the state machine is driven from here so that
+     * every transition and every storage write stays on this one thread. */
     ucmd = focus_ui_take_command();
     if (ucmd != FM_UI_CMD_NONE) {
-      printf("\n[FocusMate] screen: %s\n", ui_cmd_name(ucmd));
-      fflush(stdout);
-      switch (ucmd) {
-      case FM_UI_CMD_START:
-        fm_state_handle_event(&g_session, FM_EVT_START);
-        break;
-      case FM_UI_CMD_PAUSE:
-        fm_state_handle_event(&g_session, FM_EVT_PAUSE);
-        break;
-      case FM_UI_CMD_RESUME:
-        fm_state_handle_event(&g_session, FM_EVT_RESUME);
-        break;
-      case FM_UI_CMD_CANCEL:
-        fm_state_handle_event(&g_session, FM_EVT_CANCEL);
-        focus_storage_clear();
-        break;
-      case FM_UI_CMD_QUICKSTART:
-        /* No session is planned (fresh boot, or right after a long press
-         * cancelled one), so start a default one rather than doing nothing.
-         * This is what makes the key work in every state. */
-        cmd_goal("专注", 25);
-        fm_state_handle_event(&g_session, FM_EVT_START);
-        break;
-      default:
-        break;
-      }
+      apply_ui_command(ucmd);
       continue;
     }
 
