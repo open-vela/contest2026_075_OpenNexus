@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/select.h>
 
 #include "core/focus_state.h"
 #include "core/focus_timer.h"
@@ -121,6 +122,24 @@ static void on_tick(void)
 
   /* Push the same countdown onto the AMOLED once per second. */
   focus_ui_refresh(&g_session);
+}
+
+/* Name a screen-originated command so the console log shows what was tapped. */
+
+static const char *ui_cmd_name(fm_ui_cmd_t c)
+{
+  switch (c) {
+  case FM_UI_CMD_START:
+    return "START";
+  case FM_UI_CMD_PAUSE:
+    return "PAUSE";
+  case FM_UI_CMD_RESUME:
+    return "RESUME";
+  case FM_UI_CMD_CANCEL:
+    return "STOP";
+  default:
+    return "?";
+  }
 }
 
 static void print_usage(void)
@@ -247,6 +266,51 @@ int main(int argc, char *argv[])
 
   char line[256];
   while (1) {
+    fm_ui_cmd_t ucmd;
+
+    /* A tap on the panel.  The button callback only leaves a request behind;
+     * the state machine is driven from here so that every transition and
+     * every storage write stays on this one thread. */
+    ucmd = focus_ui_take_command();
+    if (ucmd != FM_UI_CMD_NONE) {
+      printf("\n[FocusMate] screen: %s\n", ui_cmd_name(ucmd));
+      fflush(stdout);
+      switch (ucmd) {
+      case FM_UI_CMD_START:
+        fm_state_handle_event(&g_session, FM_EVT_START);
+        break;
+      case FM_UI_CMD_PAUSE:
+        fm_state_handle_event(&g_session, FM_EVT_PAUSE);
+        break;
+      case FM_UI_CMD_RESUME:
+        fm_state_handle_event(&g_session, FM_EVT_RESUME);
+        break;
+      case FM_UI_CMD_CANCEL:
+        fm_state_handle_event(&g_session, FM_EVT_CANCEL);
+        focus_storage_clear();
+        break;
+      default:
+        break;
+      }
+      continue;
+    }
+
+    /* Console input, polled with a short timeout so that taps are still acted
+     * on promptly while the user types nothing. */
+    {
+      fd_set rfds;
+      struct timeval tv;
+
+      FD_ZERO(&rfds);
+      FD_SET(0, &rfds);
+      tv.tv_sec = 0;
+      tv.tv_usec = 100000;
+
+      if (select(1, &rfds, NULL, NULL, &tv) <= 0) {
+        continue;
+      }
+    }
+
     printf("focusmate> ");
     fflush(stdout);
     if (!fgets(line, sizeof(line), stdin)) {

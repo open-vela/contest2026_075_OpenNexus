@@ -37,11 +37,18 @@
 #include "focus_ui.h"
 
 #include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
 #include <pthread.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
+#include <time.h>
 #include <unistd.h>
+
+#include <nuttx/input/buttons.h>
 
 #include <lvgl/lvgl.h>
 
@@ -62,6 +69,26 @@
  */
 
 #define UI_IDLE_MAX_MS   50
+
+/* ---------------------------------------------------------------------------
+ * Board key fallback
+ * ---------------------------------------------------------------------------
+ * This panel is a display-only module (SiFli describe it as a "Single-Screen
+ * LCD"): it carries no touch layer, and no touch controller answers on either
+ * I2C bus.  /dev/input0 therefore exists - sifli's I2C driver reports success
+ * even when the chip NAKs - but it can never deliver an event.
+ *
+ * The board's single user key (KEY2 on PA11, exposed as /dev/buttons) drives
+ * the same command queue the on-screen buttons feed:
+ *
+ *   short press -> the primary action for the current state
+ *                  (START / PAUSE / RESUME)
+ *   long press  -> STOP, i.e. give up the session
+ */
+
+#define BTN_DEVPATH        "/dev/buttons"
+#define BTN_POLL_MS        100
+#define BTN_LONGPRESS_MS   1500
 
 /* LVGL rendering + the LCD flush callback need a generous stack. */
 
@@ -89,6 +116,23 @@ static lv_obj_t *s_title_label;
 static lv_obj_t *s_state_label;
 static lv_obj_t *s_bar;
 static lv_obj_t *s_info_label;
+static lv_obj_t *s_btn_primary;
+static lv_obj_t *s_btn_primary_lbl;
+static lv_obj_t *s_btn_stop;
+static lv_obj_t *s_btn_stop_lbl;
+
+/* Button requests cross from the refresh thread to the CLI thread here.
+ * This is deliberately a separate lock: the LVGL callback already runs
+ * inside ui_thread() while s_lock is held, so reusing s_lock would
+ * self-deadlock on the first tap.
+ */
+
+static pthread_mutex_t s_cmd_lock = PTHREAD_MUTEX_INITIALIZER;
+static fm_ui_cmd_t s_pending_cmd = FM_UI_CMD_NONE;
+
+static pthread_t s_btn_thread;
+static volatile int s_btn_thread_run;
+static volatile int s_cur_state = FM_IDLE;
 
 static pthread_mutex_t s_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_t s_thread;
@@ -143,6 +187,175 @@ static void *ui_thread(void *arg)
   return NULL;
 }
 
+/* Record a button tap.  Runs on the refresh thread, deep inside
+ * lv_timer_handler(), so it must not touch the state machine - it only
+ * leaves a request behind for the CLI thread to pick up.
+ */
+
+static void btn_event_cb(lv_event_t *e)
+{
+  lv_obj_t *btn = lv_event_get_target(e);
+  fm_ui_cmd_t cmd = (fm_ui_cmd_t)(intptr_t)lv_obj_get_user_data(btn);
+
+  if (cmd == FM_UI_CMD_NONE)
+    {
+      return;
+    }
+
+  pthread_mutex_lock(&s_cmd_lock);
+  s_pending_cmd = cmd;
+  pthread_mutex_unlock(&s_cmd_lock);
+}
+
+/* Show/hide a button, retitle it and re-point it at a command.  Must be
+ * called with s_lock held.  The primary button carries START, PAUSE or
+ * RESUME depending on the state, so the command lives in user_data rather
+ * than in the event callback.
+ */
+
+static void btn_config(lv_obj_t *btn, lv_obj_t *lbl, int visible,
+                       const char *text, uint32_t bg, fm_ui_cmd_t cmd)
+{
+  if (!visible)
+    {
+      lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+      return;
+    }
+
+  if (text != NULL)
+    {
+      lv_label_set_text(lbl, text);
+    }
+
+  lv_obj_set_style_bg_color(btn, lv_color_hex(bg), 0);
+  lv_obj_set_user_data(btn, (void *)(intptr_t)cmd);
+  lv_obj_clear_flag(btn, LV_OBJ_FLAG_HIDDEN);
+}
+
+static lv_obj_t *btn_make(lv_obj_t *parent,
+                          lv_align_t align, lv_coord_t x_ofs,
+                          lv_obj_t **out_lbl)
+{
+  lv_obj_t *btn = lv_button_create(parent);
+  lv_obj_t *lbl;
+
+  lv_obj_set_size(btn, 140, 56);
+  lv_obj_align(btn, align, x_ofs, -44);
+  lv_obj_set_style_radius(btn, 14, 0);
+  lv_obj_set_style_bg_color(btn, lv_color_hex(0x2a3138), 0);
+  lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL);
+
+  lbl = lv_label_create(btn);
+  lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, 0);
+  lv_obj_set_style_text_color(lbl, lv_color_hex(0xffffff), 0);
+  lv_label_set_text(lbl, "-");
+  lv_obj_center(lbl);
+
+  lv_obj_set_user_data(btn, (void *)(intptr_t)FM_UI_CMD_NONE);
+  lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+
+  *out_lbl = lbl;
+  return btn;
+}
+
+/* Primary action offered by the current state, mirroring the on-screen
+ * primary button so the key and the button never disagree. */
+
+static fm_ui_cmd_t primary_cmd_for(int state)
+{
+  switch (state)
+    {
+    case FM_READY:
+    case FM_COMPLETED:
+      return FM_UI_CMD_START;
+
+    case FM_FOCUSING:
+      return FM_UI_CMD_PAUSE;
+
+    case FM_PAUSED:
+    case FM_INTERRUPTED:
+    case FM_RECOVERING:
+      return FM_UI_CMD_RESUME;
+
+    default:
+      /* IDLE / PLANNING: nothing to do yet. */
+      return FM_UI_CMD_NONE;
+    }
+}
+
+/* Watch the board key and turn presses into queued commands.  Like the LVGL
+ * callback, this thread never touches the state machine itself. */
+
+static void *button_thread(void *arg)
+{
+  struct timespec t_down = {0, 0};
+  bool down = false;
+  int fd;
+
+  (void)arg;
+
+  fd = open(BTN_DEVPATH, O_RDONLY);
+  if (fd < 0)
+    {
+      syslog(LOG_WARNING, "[focus_ui] %s unavailable: %d (key input off)\n",
+             BTN_DEVPATH, errno);
+      return NULL;
+    }
+
+  syslog(LOG_INFO, "[focus_ui] key input on %s (short=action, long=stop)\n",
+         BTN_DEVPATH);
+
+  while (s_btn_thread_run)
+    {
+      btn_buttonset_t bits = 0;
+      struct pollfd pfd;
+
+      pfd.fd = fd;
+      pfd.events = POLLIN;
+      pfd.revents = 0;
+
+      if (poll(&pfd, 1, BTN_POLL_MS) <= 0)
+        {
+          continue;
+        }
+
+      if (read(fd, &bits, sizeof(bits)) != (ssize_t)sizeof(bits))
+        {
+          continue;
+        }
+
+      if (bits != 0 && !down)
+        {
+          down = true;
+          clock_gettime(CLOCK_MONOTONIC, &t_down);
+        }
+      else if (bits == 0 && down)
+        {
+          struct timespec now;
+          fm_ui_cmd_t cmd;
+          long held;
+
+          down = false;
+          clock_gettime(CLOCK_MONOTONIC, &now);
+          held = (now.tv_sec - t_down.tv_sec) * 1000
+                 + (now.tv_nsec - t_down.tv_nsec) / 1000000;
+
+          cmd = (held >= BTN_LONGPRESS_MS) ? FM_UI_CMD_CANCEL
+                                           : primary_cmd_for(s_cur_state);
+
+          if (cmd != FM_UI_CMD_NONE)
+            {
+              pthread_mutex_lock(&s_cmd_lock);
+              s_pending_cmd = cmd;
+              pthread_mutex_unlock(&s_cmd_lock);
+            }
+        }
+    }
+
+  close(fd);
+  return NULL;
+}
+
 /* Build the widget tree.  Must be called with s_lock held. */
 
 static void ui_build(void)
@@ -181,6 +394,12 @@ static void ui_build(void)
   lv_obj_set_width(s_info_label, 360);
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 140);
   lv_label_set_text(s_info_label, "待机中");
+
+  /* On-screen controls.  The primary button means START / PAUSE / RESUME
+   * depending on the state; STOP is the "give up" action. */
+
+  s_btn_primary = btn_make(scr, LV_ALIGN_BOTTOM_LEFT, 30, &s_btn_primary_lbl);
+  s_btn_stop = btn_make(scr, LV_ALIGN_BOTTOM_RIGHT, -30, &s_btn_stop_lbl);
 }
 
 /* Update every widget from the session.  Must be called with s_lock held. */
@@ -192,6 +411,9 @@ static void ui_apply(const fm_session_t *sess)
   int stage_total = 0;
   int remain = 0;
   uint32_t color = s_state_colors[0];
+
+  /* Let the key thread know which action is the primary one right now. */
+  s_cur_state = (int)sess->state;
 
   if (sess->state < FM_STATE_COUNT)
     {
@@ -319,6 +541,54 @@ static void ui_apply(const fm_session_t *sess)
     default:
       break;
     }
+
+  /* On-screen controls mirror what the CLI accepts in this state.  The
+   * INTERRUPTED / RECOVERING rows are the product's whole point: the device
+   * noticed on its own and is now offering to pick the session back up with
+   * a single tap. */
+
+  switch (sess->state)
+    {
+    case FM_READY:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "START", 0x30a030, FM_UI_CMD_START);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+      break;
+
+    case FM_FOCUSING:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "PAUSE", 0xd08020, FM_UI_CMD_PAUSE);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "STOP", 0x555c64, FM_UI_CMD_CANCEL);
+      break;
+
+    case FM_PAUSED:
+    case FM_INTERRUPTED:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "RESUME", 0x2070d0, FM_UI_CMD_RESUME);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "STOP", 0x555c64, FM_UI_CMD_CANCEL);
+      break;
+
+    case FM_RECOVERING:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "RESUME", 0x20a060, FM_UI_CMD_RESUME);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "STOP", 0x555c64, FM_UI_CMD_CANCEL);
+      break;
+
+    case FM_COMPLETED:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "START", 0x30a030, FM_UI_CMD_START);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+      break;
+
+    default:
+      /* IDLE / PLANNING: nothing sensible to tap yet. */
+      btn_config(s_btn_primary, s_btn_primary_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+      break;
+    }
 }
 
 /****************************************************************************
@@ -385,6 +655,17 @@ int focus_ui_init(void)
       pthread_attr_destroy(&attr);
     }
 
+  /* Board key: the panel has no touch layer, so this is the physical way in. */
+  if (!s_btn_thread_run)
+    {
+      s_btn_thread_run = 1;
+      if (pthread_create(&s_btn_thread, NULL, button_thread, NULL) != 0)
+        {
+          s_btn_thread_run = 0;
+          syslog(LOG_ERR, "[focus_ui] key thread create failed\n");
+        }
+    }
+
   pthread_mutex_unlock(&s_lock);
 
   syslog(LOG_INFO, "[focus_ui] initialised (touch=%d)\n", s_touch_ok);
@@ -427,6 +708,12 @@ void focus_ui_notice(const char *msg)
 
 void focus_ui_deinit(void)
 {
+  if (s_btn_thread_run)
+    {
+      s_btn_thread_run = 0;
+      pthread_join(s_btn_thread, NULL);
+    }
+
   pthread_mutex_lock(&s_lock);
 
   if (s_thread_run)
@@ -438,4 +725,21 @@ void focus_ui_deinit(void)
     }
 
   pthread_mutex_unlock(&s_lock);
+}
+
+fm_ui_cmd_t focus_ui_take_command(void)
+{
+  fm_ui_cmd_t cmd;
+
+  pthread_mutex_lock(&s_cmd_lock);
+  cmd = s_pending_cmd;
+  s_pending_cmd = FM_UI_CMD_NONE;
+  pthread_mutex_unlock(&s_cmd_lock);
+
+  return cmd;
+}
+
+int focus_ui_has_touch(void)
+{
+  return s_ready && s_touch_ok;
 }
