@@ -137,6 +137,8 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
     return "RESUME";
   case FM_UI_CMD_CANCEL:
     return "STOP";
+  case FM_UI_CMD_QUICKSTART:
+    return "QUICKSTART";
   default:
     return "?";
   }
@@ -288,6 +290,13 @@ int main(int argc, char *argv[])
       case FM_UI_CMD_CANCEL:
         fm_state_handle_event(&g_session, FM_EVT_CANCEL);
         focus_storage_clear();
+        break;
+      case FM_UI_CMD_QUICKSTART:
+        /* No session is planned (fresh boot, or right after a long press
+         * cancelled one), so start a default one rather than doing nothing.
+         * This is what makes the key work in every state. */
+        cmd_goal("专注", 25);
+        fm_state_handle_event(&g_session, FM_EVT_START);
         break;
       default:
         break;

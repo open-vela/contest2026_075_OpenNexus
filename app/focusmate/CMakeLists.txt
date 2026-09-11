@@ -33,6 +33,7 @@ if(CONFIG_LVX_USE_DEMO_FOCUSMATE)
       sensor/phone_sensor.c
       storage/focus_storage.c
       ui/focus_ui.c
+      ui/lv_font_simsun_24_cjk.c
     INCLUDE_DIRECTORIES
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${NUTTX_APPS_DIR}/netutils/cjson/cJSON

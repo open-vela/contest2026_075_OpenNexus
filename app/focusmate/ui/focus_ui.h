@@ -56,7 +56,13 @@ typedef enum
   FM_UI_CMD_START,
   FM_UI_CMD_PAUSE,
   FM_UI_CMD_RESUME,
-  FM_UI_CMD_CANCEL
+  FM_UI_CMD_CANCEL,
+
+  /* No goal has been set yet (IDLE after a cancel, or a fresh boot), so the
+   * caller should plan a default session and start it straight away.  Without
+   * this the key would go dead after a long press, which is exactly what the
+   * first hardware test showed. */
+  FM_UI_CMD_QUICKSTART
 } fm_ui_cmd_t;
 
 /* Pop the pending button request, or FM_UI_CMD_NONE when there is none.
