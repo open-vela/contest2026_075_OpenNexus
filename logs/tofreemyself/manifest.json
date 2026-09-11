@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "team_id": "contest2026_075_OpenNexus",
+  "github_login": "tofreemyself",
+  "generator": "opencode-collector@1.3.0",
+  "updated_at": "2026-09-11T07:30:05.490Z",
+  "sessions": [
+    {
+      "session_id": "ses_f70a0fbb1ffexzAb7nCaz0kU6S",
+      "tool": "opencode",
+      "started_at": "2026-09-11T07:29:24.048Z",
+      "last_event_at": "2026-09-11T07:30:05.490Z",
+      "event_count": 11,
+      "raw_message_count": 6,
+      "file_path": "logs/tofreemyself/2026-09-11/opencode__ses_f70a0fbb1ffexzAb7nCaz0kU6S.jsonl",
+      "collection_mode": "cli",
+      "health": "ok",
+      "title": "FocusMate eight focus states in NOTES.md",
+      "model": "deepseek/deepseek-flash"
+    }
+  ]
+}
