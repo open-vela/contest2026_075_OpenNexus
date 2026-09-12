@@ -21,6 +21,7 @@ const char *fm_state_name(fm_state_t state)
   case FM_IDLE:           return "IDLE";
   case FM_PLANNING:       return "PLANNING";
   case FM_READY:          return "READY";
+  case FM_DURATION_SELECT:return "DURATION";
   case FM_FOCUSING:       return "FOCUSING";
   case FM_PAUSED:         return "PAUSED";
   case FM_INTERRUPTED:    return "INTERRUPTED";
@@ -40,6 +41,8 @@ const char *fm_event_name(fm_event_t evt)
   case FM_EVT_PLAN_READY:      return "PLAN_READY";
   case FM_EVT_PLAN_FAILED:     return "PLAN_FAILED";
   case FM_EVT_START:           return "START";
+  case FM_EVT_DURATION_SELECTED:return "DURATION_SELECTED";
+  case FM_EVT_ROUND_CONTINUE:  return "ROUND_CONTINUE";
   case FM_EVT_PAUSE:           return "PAUSE";
   case FM_EVT_RESUME:          return "RESUME";
   case FM_EVT_PHONE_REMOVED:   return "PHONE_REMOVED";
@@ -100,6 +103,7 @@ static fm_state_t finish_review(fm_session_t *sess, fm_event_t evt)
   }
 
   sess->last_round_completed = 0;
+  sess->review_reason = FM_REVIEW_NONE;
 
   if (sess->settlement_pending) {
     sess->settlement_pending = false;
@@ -144,16 +148,29 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
       if (idx < 0) {
         next = FM_COMPLETED;
       } else {
-        sess->current_stage = idx;
-        sess->stage_elapsed_seconds = 0;
-        sess->round_count++;
-        next = FM_FOCUSING;
+        next = FM_DURATION_SELECT;
       }
     } else if (evt == FM_EVT_SETTLE_REQUEST) {
       sess->state_before_settle = old;
       next = FM_SETTLE_CONFIRM;
     } else if (evt == FM_EVT_CANCEL) {
       next = FM_IDLE;
+    }
+    break;
+
+  case FM_DURATION_SELECT:
+    if (evt == FM_EVT_DURATION_SELECTED) {
+      int idx = next_uncompleted_stage(sess);
+      if (idx < 0) {
+        next = FM_COMPLETED;
+      } else {
+        sess->current_stage = idx;
+        sess->stage_elapsed_seconds = 0;
+        sess->round_count++;
+        next = FM_FOCUSING;
+      }
+    } else if (evt == FM_EVT_CANCEL) {
+      next = FM_READY;
     }
     break;
 
@@ -164,9 +181,12 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
     } else if (evt == FM_EVT_PHONE_REMOVED) {
       sess->interrupt_count++;
       next = FM_INTERRUPTED;
-    } else if (evt == FM_EVT_ROUND_END ||
-               evt == FM_EVT_STAGE_TIMEOUT ||
+    } else if (evt == FM_EVT_ROUND_END) {
+      sess->review_reason = FM_REVIEW_MANUAL;
+      next = FM_REVIEWING;
+    } else if (evt == FM_EVT_STAGE_TIMEOUT ||
                evt == FM_EVT_SESSION_FINISHED) {
+      sess->review_reason = FM_REVIEW_TIMEOUT;
       next = FM_REVIEWING;
     } else if (evt == FM_EVT_SETTLE_REQUEST) {
       sess->state_before_settle = old;
@@ -180,6 +200,7 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
     if (evt == FM_EVT_RESUME) {
       next = FM_FOCUSING;
     } else if (evt == FM_EVT_ROUND_END) {
+      sess->review_reason = FM_REVIEW_MANUAL;
       next = FM_REVIEWING;
     } else if (evt == FM_EVT_SETTLE_REQUEST) {
       sess->state_before_settle = old;
@@ -212,8 +233,15 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
     break;
 
   case FM_REVIEWING:
-    if (evt == FM_EVT_REVIEW_NONE || evt == FM_EVT_REVIEW_DONE) {
+    if (evt == FM_EVT_REVIEW_DONE) {
       next = finish_review(sess, evt);
+    } else if (evt == FM_EVT_REVIEW_NONE &&
+               (sess->review_reason == FM_REVIEW_TIMEOUT ||
+                sess->review_reason == FM_REVIEW_SETTLE)) {
+      next = finish_review(sess, evt);
+    } else if (evt == FM_EVT_ROUND_CONTINUE &&
+               sess->review_reason == FM_REVIEW_MANUAL) {
+      next = FM_FOCUSING;
     } else if (evt == FM_EVT_CANCEL) {
       next = FM_IDLE;
     }
@@ -225,6 +253,7 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
     } else if (evt == FM_EVT_SETTLE_CONFIRM) {
       sess->settlement_pending = true;
       sess->early_exit = true;
+      sess->review_reason = FM_REVIEW_SETTLE;
       next = FM_REVIEWING;
     } else if (evt == FM_EVT_CANCEL) {
       next = FM_IDLE;

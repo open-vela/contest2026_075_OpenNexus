@@ -126,7 +126,7 @@ extern const lv_font_t lv_font_simsun_24_cjk;
 
 #define FONT_CJK  (&lv_font_simsun_24_cjk)
 
-#define FM_STATE_COUNT  10
+#define FM_STATE_COUNT  11
 
 /****************************************************************************
  * Private Data
@@ -149,6 +149,10 @@ static lv_obj_t *s_review_task_lbls[FM_MAX_STAGES];
 static int s_review_mode;
 static int s_review_selection;
 
+static lv_obj_t *s_duration_overlay;
+static lv_obj_t *s_duration_btns[4];
+static int s_duration_selected;
+
 /* Button requests cross from the refresh thread to the CLI thread here.
  * This is deliberately a separate lock: the LVGL callback already runs
  * inside ui_thread() while s_lock is held, so reusing s_lock would
@@ -169,16 +173,17 @@ static volatile int s_ready;
 static int s_touch_ok;
 
 static const uint32_t s_state_colors[FM_STATE_COUNT] = {
-  0x808080, /* IDLE        grey   */
-  0xf0a000, /* PLANNING    amber  */
-  0x30a030, /* READY       green  */
-  0x2070d0, /* FOCUSING    blue   */
-  0xd08020, /* PAUSED      orange */
-  0xd02020, /* INTERRUPTED red    */
-  0x4090d0, /* RECOVERING  sky    */
-  0x20a060, /* COMPLETED   teal   */
-  0xf0a000, /* REVIEWING   amber  */
-  0xd02020  /* SETTLE      red    */
+  0x808080, /* IDLE            grey   */
+  0xf0a000, /* PLANNING        amber  */
+  0x30a030, /* READY           green  */
+  0x20a060, /* DURATION        teal   */
+  0x2070d0, /* FOCUSING        blue   */
+  0xd08020, /* PAUSED          orange */
+  0xd02020, /* INTERRUPTED     red    */
+  0x4090d0, /* RECOVERING      sky    */
+  0xf0a000, /* REVIEWING       amber  */
+  0xd02020, /* SETTLE_CONFIRM  red    */
+  0x20a060  /* COMPLETED       teal   */
 };
 
 /****************************************************************************
@@ -245,6 +250,16 @@ static void review_task_cb(lv_event_t *e)
   pthread_mutex_lock(&s_cmd_lock);
   s_review_selection = idx;
   s_pending_cmd = FM_UI_CMD_REVIEW_SELECTED;
+  pthread_mutex_unlock(&s_cmd_lock);
+}
+
+static void duration_cb(lv_event_t *e)
+{
+  lv_obj_t *btn = lv_event_get_target(e);
+
+  pthread_mutex_lock(&s_cmd_lock);
+  s_duration_selected = (int)(intptr_t)lv_obj_get_user_data(btn);
+  s_pending_cmd = FM_UI_CMD_DURATION_SELECTED;
   pthread_mutex_unlock(&s_cmd_lock);
 }
 
@@ -389,8 +404,16 @@ static void *button_thread(void *arg)
           held = (now.tv_sec - t_down.tv_sec) * 1000
                  + (now.tv_nsec - t_down.tv_nsec) / 1000000;
 
-          cmd = (held >= BTN_LONGPRESS_MS) ? FM_UI_CMD_SETTLE_REQUEST
-                                           : primary_cmd_for(s_cur_state);
+          if (held >= BTN_LONGPRESS_MS)
+            {
+              cmd = (s_cur_state == FM_DURATION_SELECT)
+                        ? FM_UI_CMD_DURATION_CANCEL
+                        : FM_UI_CMD_SETTLE_REQUEST;
+            }
+          else
+            {
+              cmd = primary_cmd_for(s_cur_state);
+            }
 
           if (cmd != FM_UI_CMD_NONE)
             {
@@ -498,6 +521,48 @@ static void ui_build(void)
       s_review_task_btns[i] = btn;
       s_review_task_lbls[i] = lbl;
     }
+
+  /* Focus-round length selector.  The user chooses the length after START;
+   * the AI plan never supplies a time budget. */
+  s_duration_overlay = lv_obj_create(scr);
+  lv_obj_set_size(s_duration_overlay, 360, 300);
+  lv_obj_center(s_duration_overlay);
+  lv_obj_set_style_bg_color(s_duration_overlay, lv_color_hex(0x1b222b), 0);
+  lv_obj_set_style_radius(s_duration_overlay, 16, 0);
+  lv_obj_add_flag(s_duration_overlay, LV_OBJ_FLAG_HIDDEN);
+
+  lv_obj_t *duration_title = lv_label_create(s_duration_overlay);
+  lv_obj_set_style_text_font(duration_title, FONT_CJK, 0);
+  lv_obj_set_style_text_color(duration_title, lv_color_hex(0xffffff), 0);
+  lv_label_set_text(duration_title, "选择本轮专注时长");
+  lv_obj_align(duration_title, LV_ALIGN_TOP_MID, 0, 8);
+
+  {
+    static const int duration_values[4] = {25, 30, 45, 60};
+
+    for (int i = 0; i < 4; i++)
+      {
+        char text[16];
+        lv_obj_t *btn = lv_button_create(s_duration_overlay);
+        lv_obj_set_size(btn, 150, 64);
+        lv_obj_align(btn, LV_ALIGN_TOP_LEFT,
+                     20 + (i % 2) * 170,
+                     56 + (i / 2) * 82);
+        lv_obj_set_style_bg_color(btn, lv_color_hex(0x2a3138), 0);
+        lv_obj_set_style_radius(btn, 14, 0);
+        lv_obj_set_user_data(btn, (void *)(intptr_t)duration_values[i]);
+        lv_obj_add_event_cb(btn, duration_cb, LV_EVENT_CLICKED, NULL);
+
+        lv_obj_t *lbl = lv_label_create(btn);
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_40, 0);
+        lv_obj_set_style_text_color(lbl, lv_color_hex(0xffffff), 0);
+        snprintf(text, sizeof(text), "%d", duration_values[i]);
+        lv_label_set_text(lbl, text);
+        lv_obj_center(lbl);
+
+        s_duration_btns[i] = btn;
+      }
+  }
 }
 
 /* The big countdown, shown only while a session is running.  Must be called
@@ -552,6 +617,23 @@ static void review_apply(const fm_session_t *sess)
     }
 }
 
+static void duration_apply(const fm_session_t *sess)
+{
+  if (s_duration_overlay == NULL)
+    {
+      return;
+    }
+
+  if (sess->state == FM_DURATION_SELECT)
+    {
+      lv_obj_clear_flag(s_duration_overlay, LV_OBJ_FLAG_HIDDEN);
+    }
+  else
+    {
+      lv_obj_add_flag(s_duration_overlay, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
 /* Update every widget from the session.  Must be called with s_lock held. */
 
 static void ui_apply(const fm_session_t *sess)
@@ -575,7 +657,7 @@ static void ui_apply(const fm_session_t *sess)
 
   if (sess->current_stage >= 0 && sess->current_stage < sess->stage_count)
     {
-      stage_total = sess->stages[sess->current_stage].minutes * 60;
+      stage_total = sess->total_minutes * 60;
       remain = stage_total - sess->stage_elapsed_seconds;
       if (remain < 0)
         {
@@ -609,9 +691,15 @@ static void ui_apply(const fm_session_t *sess)
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
       snprintf(buf, sizeof(buf),
-               "AI 已拆解为 %d 项\n共 %d 分钟\n点击 START 开始第一项",
-               sess->stage_count, sess->total_minutes);
+               "AI 已拆解为 %d 项\n点击 START 选择本轮时长",
+               sess->stage_count);
       lv_label_set_text(s_info_label, buf);
+      break;
+
+    case FM_DURATION_SELECT:
+      lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
+      timer_hide();
+      lv_label_set_text(s_info_label, "本轮准备专注多久?");
       break;
 
     case FM_FOCUSING:
@@ -696,8 +784,21 @@ static void ui_apply(const fm_session_t *sess)
     case FM_REVIEWING:
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
-      lv_label_set_text(s_info_label,
-                        "本轮是否完成拆解任务?\n是: 选择完成任务\n否: 跳过本轮");
+      if (sess->review_reason == FM_REVIEW_MANUAL)
+        {
+          lv_label_set_text(s_info_label,
+                            "结束本轮?\nDONE: 选择完成任务\nCONTINUE: 继续计时");
+        }
+      else if (sess->review_reason == FM_REVIEW_SETTLE)
+        {
+          lv_label_set_text(s_info_label,
+                            "结束今日专注?\n本轮是否完成任务?");
+        }
+      else
+        {
+          lv_label_set_text(s_info_label,
+                            "本轮时间到\n是否完成拆解任务?\nYES: 选择任务  NO: 再开一轮");
+        }
       break;
 
     case FM_SETTLE_CONFIRM:
@@ -734,6 +835,12 @@ static void ui_apply(const fm_session_t *sess)
       btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
       break;
 
+    case FM_DURATION_SELECT:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 0, NULL, 0,
+                 FM_UI_CMD_NONE);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+      break;
+
     case FM_FOCUSING:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
                  "END", 0x2070d0, FM_UI_CMD_END_ROUND);
@@ -757,6 +864,13 @@ static void ui_apply(const fm_session_t *sess)
                      FM_UI_CMD_NONE);
           btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0,
                      FM_UI_CMD_NONE);
+        }
+      else if (sess->review_reason == FM_REVIEW_MANUAL)
+        {
+          btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                     "DONE", 0x30a030, FM_UI_CMD_REVIEW_YES);
+          btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                     "CONTINUE", 0x555c64, FM_UI_CMD_ROUND_CONTINUE);
         }
       else
         {
@@ -793,6 +907,7 @@ static void ui_apply(const fm_session_t *sess)
       break;
     }
 
+  duration_apply(sess);
   review_apply(sess);
 }
 
@@ -940,6 +1055,17 @@ int focus_ui_take_review_selection(void)
   pthread_mutex_lock(&s_cmd_lock);
   result = s_review_selection >= 0 ? s_review_selection + 1 : 0;
   s_review_selection = -1;
+  pthread_mutex_unlock(&s_cmd_lock);
+  return result;
+}
+
+int focus_ui_take_duration(void)
+{
+  int result;
+
+  pthread_mutex_lock(&s_cmd_lock);
+  result = s_duration_selected;
+  s_duration_selected = 0;
   pthread_mutex_unlock(&s_cmd_lock);
   return result;
 }

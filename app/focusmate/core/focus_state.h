@@ -18,6 +18,7 @@ typedef enum {
   FM_IDLE,
   FM_PLANNING,
   FM_READY,
+  FM_DURATION_SELECT,
   FM_FOCUSING,
   FM_PAUSED,
   FM_INTERRUPTED,
@@ -33,6 +34,8 @@ typedef enum {
   FM_EVT_PLAN_READY,
   FM_EVT_PLAN_FAILED,
   FM_EVT_START,
+  FM_EVT_DURATION_SELECTED,
+  FM_EVT_ROUND_CONTINUE,
   FM_EVT_PAUSE,
   FM_EVT_RESUME,
   FM_EVT_PHONE_REMOVED,
@@ -55,9 +58,16 @@ typedef enum {
 
 typedef struct {
   char title[FM_MAX_TITLE_LEN];
-  int minutes;
+  int minutes; /* Legacy plan field; runtime round length comes from the user. */
   bool completed;
 } fm_stage_t;
+
+typedef enum {
+  FM_REVIEW_NONE = 0,
+  FM_REVIEW_TIMEOUT,
+  FM_REVIEW_MANUAL,
+  FM_REVIEW_SETTLE
+} fm_review_reason_t;
 
 typedef struct {
   char goal[FM_MAX_GOAL_LEN];
@@ -73,6 +83,7 @@ typedef struct {
   int last_round_completed; /* 0 = none, otherwise stage index + 1 */
   bool settlement_pending;
   bool early_exit;
+  fm_review_reason_t review_reason;
   fm_state_t state_before_settle;
   fm_state_t state;
 } fm_session_t;

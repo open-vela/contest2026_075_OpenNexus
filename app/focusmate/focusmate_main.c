@@ -102,7 +102,7 @@ static void on_tick(void)
   }
   if (g_session.current_stage >= 0 &&
       g_session.current_stage < g_session.stage_count) {
-    stage_total = g_session.stages[g_session.current_stage].minutes * 60;
+    stage_total = g_session.total_minutes * 60;
     remain = stage_total - g_session.stage_elapsed_seconds;
     pct = stage_total > 0
               ? (g_session.stage_elapsed_seconds * 100) / stage_total
@@ -131,6 +131,10 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
   switch (c) {
   case FM_UI_CMD_START:
     return "START";
+  case FM_UI_CMD_DURATION_SELECTED:
+    return "DURATION_SELECTED";
+  case FM_UI_CMD_DURATION_CANCEL:
+    return "DURATION_CANCEL";
   case FM_UI_CMD_PAUSE:
     return "PAUSE";
   case FM_UI_CMD_RESUME:
@@ -141,6 +145,8 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
     return "QUICKSTART";
   case FM_UI_CMD_END_ROUND:
     return "END_ROUND";
+  case FM_UI_CMD_ROUND_CONTINUE:
+    return "ROUND_CONTINUE";
   case FM_UI_CMD_REVIEW_YES:
     return "REVIEW_YES";
   case FM_UI_CMD_REVIEW_NONE:
@@ -162,13 +168,15 @@ static void print_usage(void)
 {
   printf(
     "FocusMate commands:\n"
-    "  goal <text> <minutes>   submit goal + total time (-> PLANNING)\n"
+    "  goal <text>             submit goal (-> PLANNING)\n"
     "  plan_ready              simulate AI plan ready (-> READY)\n"
-    "  start                   start focusing\n"
+    "  start                   open focus-duration selection\n"
+    "  duration <25|30|45|60>  select this round duration and start\n"
     "  pause / resume          pause / resume\n"
     "  removed / returned      mock phone removed / returned\n"
-    "  round_end / stage_done  finish current focus round -> REVIEWING\n"
-    "  review_none             no task completed this round\n"
+    "  round_end / stage_done  end current round manually -> REVIEWING\n"
+    "  timeout                 simulate focus-round timeout -> REVIEWING\n"
+    "  review_none             no task completed (timeout review only)\n"
     "  review_done <1..4>      mark task N completed this round\n"
     "  settle                  request early settlement (-> SETTLE_CONFIRM)\n"
     "  settle_yes / settle_no  confirm or cancel settlement\n"
@@ -192,10 +200,12 @@ static void cmd_demo(void)
     if (g_session.state != FM_IDLE) {
       fm_state_handle_event(&g_session, FM_EVT_CANCEL);
     }
-    cmd_goal("完成比赛演示", 3);
+    cmd_goal("完成比赛演示", 0);
   }
 
   fm_state_handle_event(&g_session, FM_EVT_START);
+  g_session.total_minutes = 25;
+  fm_state_handle_event(&g_session, FM_EVT_DURATION_SELECTED);
   sleep(2);
   phone_sensor_mock_removed(&g_session);
   sleep(1);
@@ -205,29 +215,26 @@ static void cmd_demo(void)
   sleep(1);
   fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
   sleep(1);
-  g_session.last_round_completed = 0;
-  fm_state_handle_event(&g_session, FM_EVT_REVIEW_NONE);
+  g_session.last_round_completed = 1;
+  fm_state_handle_event(&g_session, FM_EVT_REVIEW_DONE);
   printf("===== Demo v2 end =====\n");
 }
 
 static void cmd_goal(const char *text, int minutes)
 {
-  if (minutes <= 0) {
-    minutes = 45;
-  }
+  (void)minutes;
 
   fm_state_init(&g_session);
   fm_state_handle_event(&g_session, FM_EVT_GOAL_SUBMITTED);
   usleep(700000);
 
-  printf("[FocusMate] planning goal: %s (%d min)...\n", text, minutes);
-  if (focus_agent_plan(&g_session, text, minutes) == 0 &&
+  printf("[FocusMate] planning goal: %s...\n", text);
+  if (focus_agent_plan(&g_session, text) == 0 &&
       g_session.stage_count > 0) {
-    printf("[FocusMate] plan ready: %d stages, %d min total\n",
-           g_session.stage_count, g_session.total_minutes);
+    printf("[FocusMate] plan ready: %d tasks\n", g_session.stage_count);
     for (int i = 0; i < g_session.stage_count; i++) {
-      printf("  [%d/%d] %s (%d min)\n", i + 1, g_session.stage_count,
-             g_session.stages[i].title, g_session.stages[i].minutes);
+      printf("  [%d/%d] %s\n", i + 1, g_session.stage_count,
+             g_session.stages[i].title);
     }
     fm_state_handle_event(&g_session, FM_EVT_PLAN_READY);
   } else {
@@ -248,6 +255,17 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
   case FM_UI_CMD_START:
     fm_state_handle_event(&g_session, FM_EVT_START);
     break;
+  case FM_UI_CMD_DURATION_SELECTED: {
+    int minutes = focus_ui_take_duration();
+    if (minutes > 0) {
+      g_session.total_minutes = minutes;
+      fm_state_handle_event(&g_session, FM_EVT_DURATION_SELECTED);
+    }
+    break;
+  }
+  case FM_UI_CMD_DURATION_CANCEL:
+    fm_state_handle_event(&g_session, FM_EVT_CANCEL);
+    break;
   case FM_UI_CMD_PAUSE:
     fm_state_handle_event(&g_session, FM_EVT_PAUSE);
     break;
@@ -259,10 +277,13 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     focus_storage_clear();
     break;
   case FM_UI_CMD_QUICKSTART:
-    cmd_goal("专注", 25);
+    cmd_goal("专注", 0);
     break;
   case FM_UI_CMD_END_ROUND:
     fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
+    break;
+  case FM_UI_CMD_ROUND_CONTINUE:
+    fm_state_handle_event(&g_session, FM_EVT_ROUND_CONTINUE);
     break;
   case FM_UI_CMD_REVIEW_YES:
     focus_ui_enter_review_selection(&g_session);
@@ -423,14 +444,23 @@ int main(int argc, char *argv[])
       cmd_demo();
     } else if (strcmp(cmd, "goal") == 0) {
       char *text = strtok(NULL, " ");
-      char *minstr = strtok(NULL, " ");
       if (text) {
-        cmd_goal(text, minstr ? atoi(minstr) : 45);
+        cmd_goal(text, 0);
       }
     } else if (strcmp(cmd, "plan_ready") == 0) {
       fm_state_handle_event(&g_session, FM_EVT_PLAN_READY);
     } else if (strcmp(cmd, "start") == 0) {
       fm_state_handle_event(&g_session, FM_EVT_START);
+    } else if (strcmp(cmd, "duration") == 0) {
+      char *minstr = strtok(NULL, " ");
+      int minutes = minstr ? atoi(minstr) : 0;
+      if (minutes == 25 || minutes == 30 ||
+          minutes == 45 || minutes == 60) {
+        g_session.total_minutes = minutes;
+        fm_state_handle_event(&g_session, FM_EVT_DURATION_SELECTED);
+      } else {
+        printf("[FocusMate] duration <25|30|45|60>\n");
+      }
     } else if (strcmp(cmd, "pause") == 0) {
       fm_state_handle_event(&g_session, FM_EVT_PAUSE);
     } else if (strcmp(cmd, "resume") == 0) {
@@ -442,6 +472,10 @@ int main(int argc, char *argv[])
     } else if (strcmp(cmd, "stage_done") == 0 ||
                strcmp(cmd, "round_end") == 0) {
       fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
+    } else if (strcmp(cmd, "timeout") == 0) {
+      fm_state_handle_event(&g_session, FM_EVT_STAGE_TIMEOUT);
+    } else if (strcmp(cmd, "round_continue") == 0) {
+      fm_state_handle_event(&g_session, FM_EVT_ROUND_CONTINUE);
     } else if (strcmp(cmd, "review_none") == 0) {
       g_session.last_round_completed = 0;
       fm_state_handle_event(&g_session, FM_EVT_REVIEW_NONE);

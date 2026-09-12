@@ -54,10 +54,13 @@ typedef enum
 {
   FM_UI_CMD_NONE = 0,
   FM_UI_CMD_START,
+  FM_UI_CMD_DURATION_SELECTED,
+  FM_UI_CMD_DURATION_CANCEL,
   FM_UI_CMD_PAUSE,
   FM_UI_CMD_RESUME,
   FM_UI_CMD_CANCEL,
   FM_UI_CMD_END_ROUND,
+  FM_UI_CMD_ROUND_CONTINUE,
   FM_UI_CMD_REVIEW_YES,
   FM_UI_CMD_REVIEW_NONE,
   FM_UI_CMD_REVIEW_SELECTED,
@@ -83,6 +86,9 @@ void focus_ui_enter_review_selection(const fm_session_t *sess);
 
 /* Return the selected stage index + 1, or 0 when none is pending. */
 int focus_ui_take_review_selection(void);
+
+/* Return the pending focus-round length in minutes, or 0 when none. */
+int focus_ui_take_duration(void);
 
 /* True while the panel is up and accepting input. */
 
