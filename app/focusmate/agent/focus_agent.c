@@ -284,14 +284,15 @@ static int parse_plan_json(fm_session_t *sess, const char *json_str)
 static int local_default_plan(fm_session_t *sess, const char *goal,
                               int total_minutes)
 {
-  int n = total_minutes < 30 ? 2 : 3;
+  int n = total_minutes < 15 ? 2 : (total_minutes < 30 ? 3 : 4);
   if (n > FM_MAX_STAGES) {
     n = FM_MAX_STAGES;
   }
   const char *default_titles[FM_MAX_STAGES] = {
-    "整理思路",
-    "主要工作",
-    "完成整理"
+    "明确目标",
+    "整理准备",
+    "主要执行",
+    "检查收尾"
   };
   int base = total_minutes / n;
   int rem = total_minutes % n;
@@ -324,8 +325,9 @@ int focus_agent_plan(fm_session_t *sess, const char *goal, int total_minutes)
   if (focus_agent_is_connected()) {
     snprintf(prompt, sizeof(prompt),
              "请使用 focus-planner 技能，把目标=\"%s\"和可用时间=%d 分钟"
-             "转换为 1-4 个可执行任务。只返回技能规定的 JSON 对象，不要调用"
-             "其他工具，不要输出 markdown 代码块或解释。",
+             "转换为可执行任务。按总时长自动决定数量：少于15分钟2项，"
+             "15到29分钟3项，30分钟及以上4项。只返回技能规定的 JSON 对象，"
+             "不要调用其他工具，不要输出 markdown 代码块或解释。",
              goal, total_minutes);
 
     ask_ctx_t ctx;

@@ -9,8 +9,8 @@ Use when the user asks to plan a focus session, split a goal, start a Pomodoro-s
 ## How to use
 
 1. Read the goal and `total_minutes`.
-2. Produce 1-4 tasks that are concrete, actionable, and derived from the goal.
-3. Keep each task title short, preferably no more than 24 characters.
+2. Choose the task count from total_minutes: 2 tasks for <15 minutes, 3 tasks for 15-29 minutes, and 4 tasks for >=30 minutes.
+3. Keep each task title short, preferably no more than 24 characters, concrete, and actionable.
 4. Allocate minutes to every task. The sum must equal `total_minutes`.
 5. Use the same language as the user's goal.
 6. If information is insufficient, use a conservative plan such as prepare, execute, and check.

@@ -217,16 +217,22 @@ static void cmd_goal(const char *text, int minutes)
   }
 
   fm_state_init(&g_session);
-  printf("[FocusMate] planning goal: %s (%d min)...\n", text, minutes);
-  focus_agent_plan(&g_session, text, minutes);
-  printf("[FocusMate] plan ready: %d stages, %d min total\n",
-         g_session.stage_count, g_session.total_minutes);
-  for (int i = 0; i < g_session.stage_count; i++) {
-    printf("  [%d/%d] %s (%d min)\n", i + 1, g_session.stage_count,
-           g_session.stages[i].title, g_session.stages[i].minutes);
-  }
   fm_state_handle_event(&g_session, FM_EVT_GOAL_SUBMITTED);
-  fm_state_handle_event(&g_session, FM_EVT_PLAN_READY);
+  usleep(700000);
+
+  printf("[FocusMate] planning goal: %s (%d min)...\n", text, minutes);
+  if (focus_agent_plan(&g_session, text, minutes) == 0 &&
+      g_session.stage_count > 0) {
+    printf("[FocusMate] plan ready: %d stages, %d min total\n",
+           g_session.stage_count, g_session.total_minutes);
+    for (int i = 0; i < g_session.stage_count; i++) {
+      printf("  [%d/%d] %s (%d min)\n", i + 1, g_session.stage_count,
+             g_session.stages[i].title, g_session.stages[i].minutes);
+    }
+    fm_state_handle_event(&g_session, FM_EVT_PLAN_READY);
+  } else {
+    fm_state_handle_event(&g_session, FM_EVT_PLAN_FAILED);
+  }
 }
 
 /* Apply an input command (screen button or board key) to the session.
@@ -254,7 +260,6 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     break;
   case FM_UI_CMD_QUICKSTART:
     cmd_goal("专注", 25);
-    fm_state_handle_event(&g_session, FM_EVT_START);
     break;
   case FM_UI_CMD_END_ROUND:
     fm_state_handle_event(&g_session, FM_EVT_ROUND_END);

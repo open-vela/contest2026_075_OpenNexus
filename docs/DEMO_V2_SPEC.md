@@ -39,6 +39,7 @@ The LLM returns only JSON with one to four `stages`:
 
 Rules:
 
+- Task count by duration: 2 tasks for <15 minutes, 3 for 15-29 minutes, 4 for >=30 minutes.
 - At most four stages.
 - Stage titles are short and actionable.
 - Stage minutes must sum exactly to `total_minutes`.
@@ -48,7 +49,8 @@ Rules:
 
 ```text
 READY
-  -> KEY2 short
+  -> plan is shown first and waits for user confirmation
+  -> KEY2 short / START
 FOCUSING
   -> timer expiry or KEY2 short
 REVIEWING
