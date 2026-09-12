@@ -1,0 +1,319 @@
+{
+  "schema": "focusmate.ui.structure",
+  "version": 1,
+  "runtime": {
+    "framework": "LVGL 9.1",
+    "source": "app/focusmate/ui/focus_ui.c",
+    "canvas": {
+      "width": 390,
+      "height": 450
+    },
+    "background": "#101418",
+    "font": "lv_font_simsun_24_cjk"
+  },
+  "layers": {
+    "screen": {
+      "id": "screen",
+      "type": "screen",
+      "children": [
+        {
+          "id": "title",
+          "type": "label",
+          "align": "top_mid",
+          "y": 10,
+          "text": "FocusMate",
+          "font": "montserrat_32",
+          "color": "#ffffff"
+        },
+        {
+          "id": "state",
+          "type": "label",
+          "align": "top_mid",
+          "y": 52,
+          "source": "fm_state_name(state)",
+          "font": "montserrat_20",
+          "color": "state_color"
+        },
+        {
+          "id": "timer",
+          "type": "label",
+          "align": "top_mid",
+          "y": 84,
+          "source": "remaining_mm_ss",
+          "font": "montserrat_40",
+          "color": "#ffffff",
+          "hidden_by_default": true
+        },
+        {
+          "id": "progress",
+          "type": "bar",
+          "align": "top_mid",
+          "y": 142,
+          "width": 330,
+          "height": 16,
+          "range": [
+            0,
+            100
+          ],
+          "hidden_by_default": true
+        },
+        {
+          "id": "info",
+          "type": "label",
+          "align": "top_mid",
+          "y": 180,
+          "width": 360,
+          "font": "lv_font_simsun_24_cjk",
+          "color": "#d8dee9",
+          "text_align": "center",
+          "line_space": 10,
+          "long_mode": "wrap"
+        },
+        {
+          "id": "primary",
+          "type": "button",
+          "align": "bottom_left",
+          "x": 30,
+          "y": -44,
+          "width": 140,
+          "height": 56,
+          "radius": 14,
+          "label_font": "montserrat_20"
+        },
+        {
+          "id": "secondary",
+          "type": "button",
+          "align": "bottom_right",
+          "x": -30,
+          "y": -44,
+          "width": 140,
+          "height": 56,
+          "radius": 14,
+          "label_font": "montserrat_20"
+        },
+        {
+          "id": "review_modal",
+          "type": "panel",
+          "align": "center",
+          "width": 360,
+          "height": 300,
+          "background": "#1b222b",
+          "radius": 16,
+          "hidden_by_default": true,
+          "children": [
+            {
+              "id": "review_title",
+              "type": "label",
+              "align": "top_mid",
+              "y": 8,
+              "text": "选择本轮完成的任务",
+              "font": "lv_font_simsun_24_cjk",
+              "color": "#ffffff"
+            },
+            {
+              "id": "task_1",
+              "type": "button",
+              "align": "top_mid",
+              "y": 48,
+              "width": 320,
+              "height": 48,
+              "visible_when": "review_mode && task_1_incomplete"
+            },
+            {
+              "id": "task_2",
+              "type": "button",
+              "align": "top_mid",
+              "y": 106,
+              "width": 320,
+              "height": 48,
+              "visible_when": "review_mode && task_2_incomplete"
+            },
+            {
+              "id": "task_3",
+              "type": "button",
+              "align": "top_mid",
+              "y": 164,
+              "width": 320,
+              "height": 48,
+              "visible_when": "review_mode && task_3_incomplete"
+            },
+            {
+              "id": "task_4",
+              "type": "button",
+              "align": "top_mid",
+              "y": 222,
+              "width": 320,
+              "height": 48,
+              "visible_when": "review_mode && task_4_incomplete"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "states": {
+    "IDLE": {
+      "timer": false,
+      "progress": false,
+      "info": "把手机放好\\n想好要做的事\\n点一下就好",
+      "primary": {
+        "text": "START",
+        "color": "#30a030",
+        "cmd": "QUICKSTART"
+      },
+      "secondary": {
+        "visible": false
+      }
+    },
+    "PLANNING": {
+      "timer": false,
+      "progress": false,
+      "info": "AI 正在安排...",
+      "primary": {
+        "visible": false
+      },
+      "secondary": {
+        "visible": false
+      }
+    },
+    "READY": {
+      "timer": false,
+      "progress": false,
+      "info": "AI 已拆解为 {stage_count} 项\\n共 {total_minutes} 分钟\\n点击 START 开始第一项",
+      "primary": {
+        "text": "START",
+        "color": "#30a030",
+        "cmd": "START"
+      },
+      "secondary": {
+        "visible": false
+      }
+    },
+    "FOCUSING": {
+      "timer": true,
+      "progress": true,
+      "info": "{current}/{stage_count}  {title}\\n{pct}%\\n已专注 {elapsed}  中断 {interrupt_count} 次",
+      "primary": {
+        "text": "END",
+        "color": "#2070d0",
+        "cmd": "END_ROUND"
+      },
+      "secondary": {
+        "text": "PAUSE",
+        "color": "#d08020",
+        "cmd": "PAUSE"
+      }
+    },
+    "PAUSED": {
+      "timer": true,
+      "progress": true,
+      "info": "同 FOCUSING",
+      "primary": {
+        "text": "RESUME",
+        "color": "#20a060",
+        "cmd": "RESUME"
+      },
+      "secondary": {
+        "text": "END",
+        "color": "#555c64",
+        "cmd": "END_ROUND"
+      }
+    },
+    "INTERRUPTED": {
+      "timer": true,
+      "progress": true,
+      "info": "手机被取走  专注已停\\n{title}\\n中断 {interrupt_count} 次\\n点一下接着做",
+      "primary": {
+        "text": "RESUME",
+        "color": "#20a060",
+        "cmd": "RESUME"
+      },
+      "secondary": {
+        "text": "END",
+        "color": "#555c64",
+        "cmd": "END_ROUND"
+      }
+    },
+    "RECOVERING": {
+      "timer": true,
+      "progress": true,
+      "info": "你回来了!手机已放回\\n之前在做: {title}\\n点一下接着做",
+      "primary": {
+        "text": "RESUME",
+        "color": "#20a060",
+        "cmd": "RESUME"
+      },
+      "secondary": {
+        "text": "END",
+        "color": "#555c64",
+        "cmd": "END_ROUND"
+      }
+    },
+    "REVIEWING": {
+      "timer": false,
+      "progress": false,
+      "info": "本轮是否完成拆解任务?\\n是: 选择完成任务\\n否: 跳过本轮",
+      "primary": {
+        "text": "YES",
+        "color": "#30a030",
+        "cmd": "REVIEW_YES"
+      },
+      "secondary": {
+        "text": "NO",
+        "color": "#555c64",
+        "cmd": "REVIEW_NONE"
+      },
+      "modal": "review_modal"
+    },
+    "SETTLE_CONFIRM": {
+      "timer": false,
+      "progress": false,
+      "info": "结束今日专注?\\n结算 / 继续专注",
+      "primary": {
+        "text": "SETTLE",
+        "color": "#d02020",
+        "cmd": "SETTLE_CONFIRM"
+      },
+      "secondary": {
+        "text": "CONTINUE",
+        "color": "#30a030",
+        "cmd": "SETTLE_CANCEL"
+      }
+    },
+    "COMPLETED": {
+      "timer": false,
+      "progress": false,
+      "info": "完成 {completed}/{stage_count}\\n专注 {elapsed_minutes} 分钟 | 中断 {interrupt_count} 次",
+      "primary": {
+        "text": "NEW",
+        "color": "#30a030",
+        "cmd": "QUICKSTART"
+      },
+      "secondary": {
+        "visible": false
+      }
+    }
+  },
+  "interactions": [
+    {
+      "input": "touch.primary",
+      "action": "queue primary.cmd"
+    },
+    {
+      "input": "touch.secondary",
+      "action": "queue secondary.cmd"
+    },
+    {
+      "input": "key2.short",
+      "action": "queue primary_cmd_for_state"
+    },
+    {
+      "input": "key2.long",
+      "action": "queue SETTLE_REQUEST"
+    },
+    {
+      "input": "touch.review_task_n",
+      "action": "mark task n completed and return to READY"
+    }
+  ]
+}
