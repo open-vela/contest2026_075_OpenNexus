@@ -1,0 +1,35 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config LVX_USE_DEMO_FOCUSMATE
+	bool "FocusMate - AI 桌面专注伙伴"
+	default n
+	depends on GRAPHICS_LVGL
+	---help---
+		FocusMate: an AI-powered desktop focus companion.
+		Splits a goal into structured focus stages (focus-planner),
+		runs a focus state machine, and reacts to phone presence
+		(active pause/resume). M3 skeleton: state machine + CLI + UI.
+
+if LVX_USE_DEMO_FOCUSMATE
+
+config FOCUSMATE_DATA_DIR
+	string "FocusMate data directory"
+	default "/data/focusmate"
+
+config FOCUSMATE_LCD_DEVPATH
+	string "FocusMate LCD device path"
+	default "/dev/lcd0"
+
+config FOCUSMATE_INPUT_DEVPATH
+	string "FocusMate touchscreen device path"
+	default "/dev/input0"
+
+config FOCUSMATE_ENABLE_UI
+	bool "Enable LVGL UI"
+	default y
+	depends on LV_USE_NUTTX
+
+endif
