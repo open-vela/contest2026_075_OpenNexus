@@ -159,6 +159,7 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
 
   case FM_FOCUSING:
     if (evt == FM_EVT_PAUSE) {
+      sess->interrupt_count++;
       next = FM_PAUSED;
     } else if (evt == FM_EVT_PHONE_REMOVED) {
       sess->interrupt_count++;
