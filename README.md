@@ -177,6 +177,33 @@ quit                      退出
 
 `docs/board_bringup/ai_agent_velaclaw_link_fix.patch`
 
+## 构建 SF32LB52
+
+先应用公共仓补丁并准备板级配置：
+
+```bash
+cd ~/openvela
+./contest2026_075_OpenNexus/tools/enable_sf32lb52_focusmate.sh
+rm -rf cmake_out/sf32lb52_devkit_lcd
+export PATH="$PWD/prebuilts/build-tools/linux-x86_64/bin:$PWD/prebuilts/tools/linux-x86_64:$PWD/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin:$PATH"
+cmake -B cmake_out/sf32lb52_devkit_lcd -S nuttx -GNinja   -DBOARD_CONFIG=../vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh   -DEXTRA_FLAGS="-Wno-cpp -Wno-deprecated-declarations"
+cmake --build cmake_out/sf32lb52_devkit_lcd -j4
+```
+
+产物：
+
+```text
+cmake_out/sf32lb52_devkit_lcd/nuttx.bin
+```
+
+通过 UART 完整烧录：
+
+```bash
+sftool -c SF32LB52 -p /dev/ttyUSB0 -b 1000000   --before default_reset --after soft_reset   write_flash nuttx.bin@0x12010000
+```
+
+Windows 下将 `/dev/ttyUSB0` 替换为实际 COM 端口。
+
 ## 当前限制
 
 - 真实 LLM 验证需要有效模型额度和网络。
