@@ -205,14 +205,14 @@ bool focus_agent_is_connected(void)
 
 /*
  * Parse a JSON plan string into sess->stages.
- * Validates: goal, total_minutes, 2..FM_MAX_STAGES stages whose
- * minutes sum equals total_minutes. Returns 0 on success, -1 on any
- * invalid field (caller falls back to local plan).
+ * Validates: goal and 1..FM_MAX_STAGES non-empty task titles.  Legacy
+ * "minutes" fields are ignored so old planner replies still parse, but new
+ * plans should contain titles only.  Returns 0 on success.
  */
 static int parse_plan_json(fm_session_t *sess, const char *json_str)
 {
-  cJSON *root, *goal, *total, *stages, *item;
-  int i, sum = 0;
+  cJSON *root, *goal, *stages, *item;
+  int i;
 
   if (!sess || !json_str || !json_str[0]) {
     return -1;
@@ -225,18 +225,14 @@ static int parse_plan_json(fm_session_t *sess, const char *json_str)
   }
 
   goal = cJSON_GetObjectItem(root, "goal");
-  total = cJSON_GetObjectItem(root, "total_minutes");
   stages = cJSON_GetObjectItem(root, "stages");
-
-  if (!cJSON_IsString(goal) || !cJSON_IsNumber(total) ||
-      !cJSON_IsArray(stages)) {
+  if (!cJSON_IsString(goal) || !cJSON_IsArray(stages)) {
     cJSON_Delete(root);
     return -1;
   }
 
-  int total_min = (int)total->valuedouble;
   int n = cJSON_GetArraySize(stages);
-  if (total_min <= 0 || n < 1 || n > FM_MAX_STAGES) {
+  if (n < 1 || n > FM_MAX_STAGES) {
     cJSON_Delete(root);
     return -1;
   }
@@ -248,29 +244,18 @@ static int parse_plan_json(fm_session_t *sess, const char *json_str)
       return -1;
     }
     cJSON *title = cJSON_GetObjectItem(item, "title");
-    cJSON *minutes = cJSON_GetObjectItem(item, "minutes");
-    if (!cJSON_IsString(title) || !cJSON_IsNumber(minutes) ||
-        !title->valuestring[0] || (int)minutes->valuedouble <= 0) {
+    if (!cJSON_IsString(title) || !title->valuestring[0]) {
       cJSON_Delete(root);
       return -1;
     }
     strncpy(sess->stages[i].title, title->valuestring,
             sizeof(sess->stages[i].title) - 1);
     sess->stages[i].title[sizeof(sess->stages[i].title) - 1] = '\0';
-    sess->stages[i].minutes = (int)minutes->valuedouble;
-    sum += sess->stages[i].minutes;
-  }
-
-  /* minutes must sum exactly to total_minutes */
-  if (sum != total_min) {
-    syslog(LOG_WARNING, "[%s] plan minutes sum %d != total %d\n",
-           TAG, sum, total_min);
-    cJSON_Delete(root);
-    return -1;
+    sess->stages[i].minutes = 0;
   }
 
   sess->stage_count = n;
-  sess->total_minutes = total_min;
+  sess->total_minutes = 0;
   strncpy(sess->goal, goal->valuestring, sizeof(sess->goal) - 1);
   sess->goal[sizeof(sess->goal) - 1] = '\0';
 
@@ -280,25 +265,19 @@ static int parse_plan_json(fm_session_t *sess, const char *json_str)
 
 /* ── local fallback plan ───────────────────────────────────────── */
 
-/* Split the goal into 2-3 conservative stages. */
-static int local_default_plan(fm_session_t *sess, const char *goal,
-                              int total_minutes)
+/* Split the goal into three conservative stages.  No time estimate is made. */
+static int local_default_plan(fm_session_t *sess, const char *goal)
 {
-  int n = total_minutes < 15 ? 2 : (total_minutes < 30 ? 3 : 4);
-  if (n > FM_MAX_STAGES) {
-    n = FM_MAX_STAGES;
-  }
+  const int n = 3;
   const char *default_titles[FM_MAX_STAGES] = {
     "明确目标",
     "整理准备",
     "主要执行",
     "检查收尾"
   };
-  int base = total_minutes / n;
-  int rem = total_minutes % n;
 
   sess->stage_count = n;
-  sess->total_minutes = total_minutes;
+  sess->total_minutes = 0;
   strncpy(sess->goal, goal, sizeof(sess->goal) - 1);
   sess->goal[sizeof(sess->goal) - 1] = '\0';
 
@@ -306,7 +285,7 @@ static int local_default_plan(fm_session_t *sess, const char *goal,
     strncpy(sess->stages[i].title, default_titles[i],
             sizeof(sess->stages[i].title) - 1);
     sess->stages[i].title[sizeof(sess->stages[i].title) - 1] = '\0';
-    sess->stages[i].minutes = base + (i < rem ? 1 : 0);
+    sess->stages[i].minutes = 0;
   }
   syslog(LOG_INFO, "[%s] using local fallback plan (%d stages)\n",
          TAG, n);
@@ -315,7 +294,7 @@ static int local_default_plan(fm_session_t *sess, const char *goal,
 
 /* ── public API ────────────────────────────────────────────────── */
 
-int focus_agent_plan(fm_session_t *sess, const char *goal, int total_minutes)
+int focus_agent_plan(fm_session_t *sess, const char *goal)
 {
 #ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
   char prompt[512];
@@ -324,11 +303,11 @@ int focus_agent_plan(fm_session_t *sess, const char *goal, int total_minutes)
   /* Try AI planner first when connected. */
   if (focus_agent_is_connected()) {
     snprintf(prompt, sizeof(prompt),
-             "请使用 focus-planner 技能，把目标=\"%s\"和可用时间=%d 分钟"
-             "转换为可执行任务。按总时长自动决定数量：少于15分钟2项，"
-             "15到29分钟3项，30分钟及以上4项。只返回技能规定的 JSON 对象，"
+             "请使用 focus-planner 技能，把目标=\"%s\"转换为可执行任务。"
+             "只拆解任务，不要预测任务耗时，也不要分配分钟数。"
+             "根据任务复杂度决定2到4项任务。只返回技能规定的 JSON 对象，"
              "不要调用其他工具，不要输出 markdown 代码块或解释。",
-             goal, total_minutes);
+             goal);
 
     ask_ctx_t ctx;
     memset(&ctx, 0, sizeof(ctx));
@@ -359,7 +338,7 @@ int focus_agent_plan(fm_session_t *sess, const char *goal, int total_minutes)
   }
 #endif /* CONFIG_EXAMPLES_AI_AGENT_VELA */
 
-  return local_default_plan(sess, goal, total_minutes);
+  return local_default_plan(sess, goal);
 }
 
 int focus_agent_summarize(const fm_session_t *sess, char *out, int out_size)
@@ -374,10 +353,10 @@ int focus_agent_summarize(const fm_session_t *sess, char *out, int out_size)
 
   if (focus_agent_is_connected()) {
     snprintf(prompt, sizeof(prompt),
-             "用 50-80 字总结这次专注：目标=\"%s\"，计划 %d 分钟，"
-             "中断 %d 次，共 %d 个阶段。只输出总结。",
-             sess->goal, sess->total_minutes,
-             sess->interrupt_count, sess->stage_count);
+             "用 50-80 字总结这次专注：目标=\"%s\"，已完成 %d/%d 项，"
+             "累计专注 %d 分钟，中断 %d 次。只输出总结。",
+             sess->goal, sess->completed_task_count, sess->stage_count,
+             sess->elapsed_seconds / 60, sess->interrupt_count);
 
     ask_ctx_t ctx;
     memset(&ctx, 0, sizeof(ctx));
@@ -403,7 +382,8 @@ int focus_agent_summarize(const fm_session_t *sess, char *out, int out_size)
   }
 #endif /* CONFIG_EXAMPLES_AI_AGENT_VELA */
 
-  snprintf(out, out_size, "专注完成：%s，计划 %d 分钟，中断 %d 次，继续保持！",
-           sess->goal, sess->total_minutes, sess->interrupt_count);
+  snprintf(out, out_size, "专注完成：%s，完成任务 %d/%d，中断 %d 次，继续保持！",
+           sess->goal, sess->completed_task_count, sess->stage_count,
+           sess->interrupt_count);
   return 0;
 }

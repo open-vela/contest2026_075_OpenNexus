@@ -82,7 +82,7 @@ void focus_timer_set_tick_cb(void (*cb)(void))
 void focus_timer_tick(fm_session_t *sess)
 {
   int stage_idx;
-  int stage_total_sec;
+  int round_total_sec;
 
   if (!sess || sess->state != FM_FOCUSING) {
     return; /* timer only runs while focusing */
@@ -98,12 +98,9 @@ void focus_timer_tick(fm_session_t *sess)
   sess->elapsed_seconds++;
   sess->stage_elapsed_seconds++;
 
-  stage_total_sec = sess->stages[stage_idx].minutes * 60;
-  if (sess->stage_elapsed_seconds >= stage_total_sec) {
-    if (stage_idx + 1 >= sess->stage_count) {
-      fm_state_handle_event(sess, FM_EVT_SESSION_FINISHED);
-    } else {
-      fm_state_handle_event(sess, FM_EVT_STAGE_TIMEOUT);
-    }
+  round_total_sec = sess->total_minutes * 60;
+  if (round_total_sec > 0 &&
+      sess->stage_elapsed_seconds >= round_total_sec) {
+    fm_state_handle_event(sess, FM_EVT_STAGE_TIMEOUT);
   }
 }

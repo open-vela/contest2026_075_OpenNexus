@@ -28,7 +28,7 @@ bool focus_agent_is_connected(void);
  * On success fills sess->stages and returns 0. When the agent is
  * unavailable this falls back to a local default plan (M4).
  */
-int focus_agent_plan(fm_session_t *sess, const char *goal, int total_minutes);
+int focus_agent_plan(fm_session_t *sess, const char *goal);
 
 /* Ask the agent for a short completion summary (M6+). */
 int focus_agent_summarize(const fm_session_t *sess, char *out, int out_size);
