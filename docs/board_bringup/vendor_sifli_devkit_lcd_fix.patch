@@ -1,0 +1,136 @@
+diff --git a/boards/sf32lb52/drivers/input/ft6146.c b/boards/sf32lb52/drivers/input/ft6146.c
+index 321f729..1a7ea3b 100644
+--- a/boards/sf32lb52/drivers/input/ft6146.c
++++ b/boards/sf32lb52/drivers/input/ft6146.c
+@@ -69,6 +69,14 @@ struct ft6146_touch_lowerhalf_s
+   uint32_t pin_irq;
+   uint16_t last_x;
+   uint16_t last_y;
++
++  /* Set by the IRQ handler when it cannot queue the worker because one is
++   * already running.  The worker re-arms itself so the final finger state is
++   * always read.  Without this a quick tap loses its TOUCH_UP event and LVGL
++   * keeps believing the finger is still down, which makes the on-screen
++   * buttons respond only intermittently.
++   */
++  volatile bool work_pending;
+ };
+ 
+ /****************************************************************************
+@@ -118,6 +126,10 @@ static void ft6146_data_worker(void *param)
+   uint8_t touch_num;
+   int ret;
+ 
++  /* Anything that happened before this point is covered by the sample we are
++   * about to take, so the flag can be cleared first. */
++  ft6146->work_pending = false;
++
+   ret = ft6146_i2c_read(ft6146->i2c, FT6146_REG_TD_STATUS, buf, sizeof(buf));
+   if (ret < 0)
+     {
+@@ -143,6 +155,18 @@ static void ft6146_data_worker(void *param)
+   sample.point[0].y = ft6146->last_y;
+ 
+   touch_event(ft6146->lower.priv, &sample);
++
++  /* Another edge may have arrived while we were reading the panel; run once
++   * more so that a press/release pair is never collapsed into a single
++   * sample. */
++  if (ft6146->work_pending)
++    {
++      ft6146->work_pending = false;
++      if (work_queue(HPWORK, &ft6146->work, ft6146_data_worker, ft6146, 0) < 0)
++        {
++          ft6146->work_pending = true;
++        }
++    }
+ }
+ 
+ static void ft6146_irq_handler(void *arg)
+@@ -151,8 +175,16 @@ static void ft6146_irq_handler(void *arg)
+     (struct ft6146_touch_lowerhalf_s *)arg;
+   int ret;
+ 
++  /* A worker may already be running, in which case work_queue() returns
++   * -EBUSY.  That must not drop the edge (and must not trip the assert that
++   * used to live here): remember it so the running worker re-reads the panel
++   * and picks up the release.
++   */
+   ret = work_queue(HPWORK, &ft6146->work, ft6146_data_worker, ft6146, 0);
+-  DEBUGASSERT(ret == OK);
++  if (ret < 0)
++    {
++      ft6146->work_pending = true;
++    }
+ }
+ 
+ static int ft6146_hw_init(struct ft6146_touch_lowerhalf_s *ft6146)
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig b/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
+index b560a94..ca1758d 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
+@@ -91,7 +91,6 @@ CONFIG_EXAMPLES_BUTTONS_QTD=1
+ CONFIG_EXAMPLES_FB=y
+ CONFIG_EXAMPLES_GPIO=y
+ CONFIG_EXAMPLES_HELLO=y
+-CONFIG_EXAMPLES_LSM6DSL_READER=y
+ CONFIG_EXAMPLES_LVGLDEMO=y
+ CONFIG_EXAMPLES_PWM=y
+ CONFIG_EXAMPLES_TIMER=y
+@@ -105,6 +104,7 @@ CONFIG_FS_PROCFS=y
+ CONFIG_FS_ROMFS=y
+ CONFIG_FS_TMPFS=y
+ CONFIG_GRAPHICS_LVGL=y
++CONFIG_I2C=y
+ CONFIG_I2C_BITBANG=y
+ CONFIG_I2C_SLAVE=y
+ CONFIG_IDLETHREAD_STACKSIZE=16096
+@@ -150,7 +150,6 @@ CONFIG_SCHED_HPWORK=y
+ CONFIG_SCHED_LPWORK=y
+ CONFIG_SCHED_WAITPID=y
+ CONFIG_SENSORS=y
+-CONFIG_SENSORS_LSM6DSL=y
+ CONFIG_SF32LB52_USBDEV=y
+ CONFIG_SIFLI_LCD=y
+ CONFIG_SIG_EVTHREAD=y
+@@ -170,10 +169,19 @@ CONFIG_TIMER_ARCH=y
+ CONFIG_TLS_NCLEANUP=4
+ CONFIG_TLS_NELEM=4
+ CONFIG_TLS_TASK_NELEM=4
+-CONFIG_TOUCH_IRQ_PIN=41
++CONFIG_TOUCH_IRQ_PIN=31
+ CONFIG_UART_BAUD=1000000
+ CONFIG_UART_BUFSZ=1024
+ CONFIG_UART_SERIAL_CONSOLE=y
+ CONFIG_UNQLITE=y
+ CONFIG_VIDEO_FB=y
+ CONFIG_WATCHDOG=y
++
++# FocusMate + ai_agent (added for board bring-up)
++CONFIG_LVX_USE_DEMO_FOCUSMATE=y
++CONFIG_FOCUSMATE_DATA_DIR="/data/focusmate"
++CONFIG_NETUTILS_CJSON=y
++CONFIG_LV_FONT_MONTSERRAT_20=y
++CONFIG_LV_FONT_MONTSERRAT_32=y
++CONFIG_LV_FONT_MONTSERRAT_40=y
++CONFIG_LV_FONT_SIMSUN_16_CJK=y
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS b/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
+index e69de29..40814a6 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
+@@ -0,0 +1,2 @@
++sleep 3
++focusmate -d &
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
+index 32be34b..7c112bc 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
+@@ -466,7 +466,7 @@ int sf32lb52_lchspi_ulp_bringup(void)
+   /* Initialize I2C bus 0 on the touch panel pins. */
+   struct i2c_master_s *i2c0 = NULL;
+ 
+-  HAL_PIN_Set(PAD_PA37, I2C1_SCL, PIN_PULLUP, 1);
++  HAL_PIN_Set(PAD_PA30, I2C1_SCL, PIN_PULLUP, 1);
+   HAL_PIN_Set(PAD_PA33, I2C1_SDA, PIN_PULLUP, 1);
+ 
+   i2c0 = sifli_i2cbus_initialize(0);

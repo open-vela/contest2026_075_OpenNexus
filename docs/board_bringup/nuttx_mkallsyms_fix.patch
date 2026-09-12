@@ -1,0 +1,15 @@
+diff --git a/tools/mkallsyms.py b/tools/mkallsyms.py
+index bddf29ccf4d..40b3e026403 100755
+--- a/tools/mkallsyms.py
++++ b/tools/mkallsyms.py
+@@ -46,6 +46,10 @@ class SymbolTables(object):
+             self.elffile = ELFFile(file)
+         except FileNotFoundError:
+             self.elffile = None
++        except Exception:
++            # Empty/invalid placeholder ELF (e.g. nuttx.empty during the
++            # first ALLSYMS pass): treat as no symbols.
++            self.elffile = None
+         self.output = output
+         self.symbol_list = []
+ 

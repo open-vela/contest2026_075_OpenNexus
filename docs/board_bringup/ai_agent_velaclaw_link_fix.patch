@@ -1,0 +1,12 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f1b6b4a..2e2dbcb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -66,6 +66,7 @@ if(CONFIG_EXAMPLES_AI_AGENT_VELA)
+     src/voice/audio_capture.c
+     src/voice/audio_playback.c
+     src/voice/voice_channel.c
++    src/sdk/velaclaw_client_local.c
+     src/stubs.c
+     src/ui/qrcode_display.c
+   )

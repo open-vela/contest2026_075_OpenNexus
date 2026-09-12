@@ -1,0 +1,7 @@
+############################################################################
+# Contest 2026 team 075 - FocusMate (Make.defs, make build registration)
+############################################################################
+
+ifneq ($(CONFIG_LVX_USE_DEMO_FOCUSMATE),)
+CONFIGURED_APPS += $(APPDIR)/packages/demos/contest2026_075_focusmate
+endif
