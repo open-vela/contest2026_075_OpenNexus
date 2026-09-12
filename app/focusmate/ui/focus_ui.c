@@ -150,6 +150,7 @@ static int s_review_mode;
 static int s_review_selection;
 
 static lv_obj_t *s_duration_overlay;
+static lv_obj_t *s_duration_task_label;
 static lv_obj_t *s_duration_btns[4];
 static int s_duration_selected;
 
@@ -531,11 +532,15 @@ static void ui_build(void)
   lv_obj_set_style_radius(s_duration_overlay, 16, 0);
   lv_obj_add_flag(s_duration_overlay, LV_OBJ_FLAG_HIDDEN);
 
-  lv_obj_t *duration_title = lv_label_create(s_duration_overlay);
-  lv_obj_set_style_text_font(duration_title, FONT_CJK, 0);
-  lv_obj_set_style_text_color(duration_title, lv_color_hex(0xffffff), 0);
-  lv_label_set_text(duration_title, "选择本轮专注时长");
-  lv_obj_align(duration_title, LV_ALIGN_TOP_MID, 0, 8);
+  s_duration_task_label = lv_label_create(s_duration_overlay);
+  lv_obj_set_style_text_font(s_duration_task_label, FONT_CJK, 0);
+  lv_obj_set_style_text_color(s_duration_task_label, lv_color_hex(0xffffff), 0);
+  lv_obj_set_style_text_align(s_duration_task_label, LV_TEXT_ALIGN_LEFT, 0);
+  lv_obj_set_style_text_line_space(s_duration_task_label, 2, 0);
+  lv_obj_set_width(s_duration_task_label, 330);
+  lv_label_set_long_mode(s_duration_task_label, LV_LABEL_LONG_WRAP);
+  lv_label_set_text(s_duration_task_label, "");
+  lv_obj_align(s_duration_task_label, LV_ALIGN_TOP_MID, 0, 6);
 
   {
     static const int duration_values[4] = {25, 30, 45, 60};
@@ -544,19 +549,19 @@ static void ui_build(void)
       {
         char text[16];
         lv_obj_t *btn = lv_button_create(s_duration_overlay);
-        lv_obj_set_size(btn, 150, 64);
+        lv_obj_set_size(btn, 150, 60);
         lv_obj_align(btn, LV_ALIGN_TOP_LEFT,
                      20 + (i % 2) * 170,
-                     56 + (i / 2) * 82);
+                     122 + (i / 2) * 76);
         lv_obj_set_style_bg_color(btn, lv_color_hex(0x2a3138), 0);
         lv_obj_set_style_radius(btn, 14, 0);
         lv_obj_set_user_data(btn, (void *)(intptr_t)duration_values[i]);
         lv_obj_add_event_cb(btn, duration_cb, LV_EVENT_CLICKED, NULL);
 
         lv_obj_t *lbl = lv_label_create(btn);
-        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_40, 0);
+        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_32, 0);
         lv_obj_set_style_text_color(lbl, lv_color_hex(0xffffff), 0);
-        snprintf(text, sizeof(text), "%d", duration_values[i]);
+        snprintf(text, sizeof(text), "%dm", duration_values[i]);
         lv_label_set_text(lbl, text);
         lv_obj_center(lbl);
 
@@ -699,7 +704,32 @@ static void ui_apply(const fm_session_t *sess)
     case FM_DURATION_SELECT:
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
-      lv_label_set_text(s_info_label, "本轮准备专注多久?");
+      lv_label_set_text(s_info_label, "");
+      {
+        char tasks[512];
+        int off = 0;
+        int n = sess->stage_count > FM_MAX_STAGES
+                    ? FM_MAX_STAGES : sess->stage_count;
+
+        tasks[0] = '\0';
+        for (int i = 0; i < n; i++)
+          {
+            int wrote = snprintf(tasks + off, sizeof(tasks) - off,
+                                 "%d. %s%s", i + 1, sess->stages[i].title,
+                                 (i + 1 < n) ? "\n" : "");
+            if (wrote < 0)
+              {
+                break;
+              }
+            off += wrote;
+            if (off >= (int)sizeof(tasks))
+              {
+                tasks[sizeof(tasks) - 1] = '\0';
+                break;
+              }
+          }
+        lv_label_set_text(s_duration_task_label, tasks);
+      }
       break;
 
     case FM_FOCUSING:
