@@ -592,9 +592,8 @@ static void ui_apply(const fm_session_t *sess)
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
       snprintf(buf, sizeof(buf),
-               "%s\n共 %d 分 / %d 段\n点一下就好",
-               sess->goal[0] ? sess->goal : "(空)",
-               sess->total_minutes, sess->stage_count);
+               "AI 已拆解为 %d 项\n共 %d 分钟\n点击 START 开始第一项",
+               sess->stage_count, sess->total_minutes);
       lv_label_set_text(s_info_label, buf);
       break;
 
