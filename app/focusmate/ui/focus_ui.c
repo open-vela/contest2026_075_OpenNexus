@@ -64,6 +64,23 @@
 #  define CONFIG_FOCUSMATE_INPUT_DEVPATH "/dev/input0"
 #endif
 
+static const char *focus_ui_fbdev_path(void)
+{
+  if (access(CONFIG_FOCUSMATE_LCD_DEVPATH, F_OK) == 0)
+    {
+      return CONFIG_FOCUSMATE_LCD_DEVPATH;
+    }
+
+  /* goldfish exposes /dev/fb0, while the SF32LB52 LCD uses /dev/lcd0. */
+  if (strcmp(CONFIG_FOCUSMATE_LCD_DEVPATH, "/dev/fb0") != 0 &&
+      access("/dev/fb0", F_OK) == 0)
+    {
+      return "/dev/fb0";
+    }
+
+  return CONFIG_FOCUSMATE_LCD_DEVPATH;
+}
+
 /* Cap the lv_timer_handler() idle sleep so the refresh thread keeps
  * noticing widget updates queued by the CLI thread promptly.
  */
@@ -788,6 +805,7 @@ int focus_ui_init(void)
   pthread_attr_t attr;
   lv_nuttx_dsc_t dsc;
   lv_nuttx_result_t res;
+  const char *fb_path = focus_ui_fbdev_path();
 
   pthread_mutex_lock(&s_lock);
 
@@ -809,8 +827,14 @@ int focus_ui_init(void)
           memset(&res, 0, sizeof(res));
 
           lv_nuttx_dsc_init(&dsc);
-          dsc.fb_path = CONFIG_FOCUSMATE_LCD_DEVPATH;
+          dsc.fb_path = fb_path;
           dsc.input_path = CONFIG_FOCUSMATE_INPUT_DEVPATH;
+
+          if (strcmp(fb_path, CONFIG_FOCUSMATE_LCD_DEVPATH) != 0)
+            {
+              syslog(LOG_INFO, "[focus_ui] %s missing; using %s\n",
+                     CONFIG_FOCUSMATE_LCD_DEVPATH, fb_path);
+            }
 
           lv_nuttx_init(&dsc, &res);
 
@@ -818,14 +842,14 @@ int focus_ui_init(void)
             {
               syslog(LOG_ERR,
                      "[focus_ui] display init failed on %s\n",
-                     CONFIG_FOCUSMATE_LCD_DEVPATH);
+                     fb_path);
               pthread_mutex_unlock(&s_lock);
               return -ENODEV;
             }
 
           s_touch_ok = (res.indev != NULL);
           syslog(LOG_INFO, "[focus_ui] %s ready, touch %s\n",
-                 CONFIG_FOCUSMATE_LCD_DEVPATH,
+                 fb_path,
                  s_touch_ok ? "ready" : "absent (read-only UI)");
         }
       else
