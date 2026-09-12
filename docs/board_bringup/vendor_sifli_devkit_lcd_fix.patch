@@ -66,7 +66,7 @@ index 321f729..1a7ea3b 100644
  
  static int ft6146_hw_init(struct ft6146_touch_lowerhalf_s *ft6146)
 diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig b/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
-index b560a94..ca1758d 100644
+index b560a94..b201103 100644
 --- a/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
 +++ b/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
 @@ -91,7 +91,6 @@ CONFIG_EXAMPLES_BUTTONS_QTD=1
@@ -93,7 +93,7 @@ index b560a94..ca1758d 100644
  CONFIG_SF32LB52_USBDEV=y
  CONFIG_SIFLI_LCD=y
  CONFIG_SIG_EVTHREAD=y
-@@ -170,10 +169,19 @@ CONFIG_TIMER_ARCH=y
+@@ -170,10 +169,38 @@ CONFIG_TIMER_ARCH=y
  CONFIG_TLS_NCLEANUP=4
  CONFIG_TLS_NELEM=4
  CONFIG_TLS_TASK_NELEM=4
@@ -114,6 +114,25 @@ index b560a94..ca1758d 100644
 +CONFIG_LV_FONT_MONTSERRAT_32=y
 +CONFIG_LV_FONT_MONTSERRAT_40=y
 +CONFIG_LV_FONT_SIMSUN_16_CJK=y
++CONFIG_NET=y
++CONFIG_NET_TCP=y
++CONFIG_NET_TCPBACKLOG=y
++CONFIG_NET_ARP=y
++CONFIG_NET_ICMP=y
++CONFIG_NET_ICMP_SOCKET=y
++CONFIG_NET_SOCKOPTS=y
++CONFIG_NETDEV_PHY_IOCTL=y
++CONFIG_NET_LOOPBACK=y
++CONFIG_NETDB_DNSCLIENT=y
++CONFIG_NETUTILS_NETLIB=y
++CONFIG_NETUTILS_WEBCLIENT=y
++CONFIG_CRYPTO_MBEDTLS=y
++CONFIG_EXAMPLES_AI_AGENT_VELA=y
++CONFIG_FEATURE_SYSTEM_VELACLAW=y
++CONFIG_LIBC_EXECFUNCS=y
++CONFIG_SYSTEM_SYSTEM=y
++CONFIG_SYSTEM_POPEN=y
++CONFIG_NET_BINDTODEVICE=y
 diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS b/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
 index e69de29..40814a6 100644
 --- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
