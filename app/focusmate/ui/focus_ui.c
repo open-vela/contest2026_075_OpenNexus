@@ -36,6 +36,8 @@
 
 #include "focus_ui.h"
 
+#include "storage/focus_storage.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -155,6 +157,13 @@ static lv_obj_t *s_duration_task_label;
 static lv_obj_t *s_duration_btns[4];
 static int s_duration_selected;
 
+static lv_obj_t *s_library_overlay;
+static lv_obj_t *s_library_empty_label;
+static lv_obj_t *s_library_btns[FOCUS_LIBRARY_MAX];
+static lv_obj_t *s_library_lbls[FOCUS_LIBRARY_MAX];
+static int s_library_selection;
+static int s_library_active;
+
 /* Button requests cross from the refresh thread to the CLI thread here.
  * This is deliberately a separate lock: the LVGL callback already runs
  * inside ui_thread() while s_lock is held, so reusing s_lock would
@@ -266,6 +275,27 @@ static void duration_cb(lv_event_t *e)
   s_duration_selected = (int)(intptr_t)lv_obj_get_user_data(btn);
   s_pending_cmd = FM_UI_CMD_DURATION_SELECTED;
   pthread_mutex_unlock(&s_cmd_lock);
+}
+
+static void library_cb(lv_event_t *e)
+{
+  lv_obj_t *btn = lv_event_get_target(e);
+  int idx = (int)(intptr_t)lv_obj_get_user_data(btn);
+
+  pthread_mutex_lock(&s_cmd_lock);
+  s_library_selection = idx;
+  pthread_mutex_unlock(&s_cmd_lock);
+
+  for (int i = 0; i < FOCUS_LIBRARY_MAX; i++)
+    {
+      if (s_library_btns[i] == NULL)
+        {
+          continue;
+        }
+      lv_obj_set_style_bg_color(
+          s_library_btns[i],
+          lv_color_hex(i == idx ? 0x2070d0 : 0x2a3138), 0);
+    }
 }
 
 /* Show/hide a button, retitle it and re-point it at a command.  Must be
@@ -584,6 +614,48 @@ static void ui_build(void)
         s_duration_btns[i] = btn;
       }
   }
+
+  /* Unfinished-task library selector. */
+  s_library_overlay = lv_obj_create(scr);
+  lv_obj_set_size(s_library_overlay, 360, 250);
+  lv_obj_center(s_library_overlay);
+  lv_obj_set_style_bg_color(s_library_overlay, lv_color_hex(0x1b222b), 0);
+  lv_obj_set_style_radius(s_library_overlay, 16, 0);
+  lv_obj_add_flag(s_library_overlay, LV_OBJ_FLAG_HIDDEN);
+
+  lv_obj_t *library_title = lv_label_create(s_library_overlay);
+  lv_obj_set_style_text_font(library_title, FONT_CJK, 0);
+  lv_obj_set_style_text_color(library_title, lv_color_hex(0xffffff), 0);
+  lv_label_set_text(library_title, "待完成任务");
+  lv_obj_align(library_title, LV_ALIGN_TOP_MID, 0, 6);
+
+  s_library_empty_label = lv_label_create(s_library_overlay);
+  lv_obj_set_style_text_font(s_library_empty_label, FONT_CJK, 0);
+  lv_obj_set_style_text_color(s_library_empty_label, lv_color_hex(0xbfc7d5), 0);
+  lv_label_set_text(s_library_empty_label, "空");
+  lv_obj_center(s_library_empty_label);
+  lv_obj_add_flag(s_library_empty_label, LV_OBJ_FLAG_HIDDEN);
+
+  for (int i = 0; i < FOCUS_LIBRARY_MAX; i++)
+    {
+      lv_obj_t *btn = lv_button_create(s_library_overlay);
+      lv_obj_set_size(btn, 320, 42);
+      lv_obj_align(btn, LV_ALIGN_TOP_MID, 0, 40 + i * 48);
+      lv_obj_set_style_bg_color(btn, lv_color_hex(0x2a3138), 0);
+      lv_obj_set_style_radius(btn, 10, 0);
+      lv_obj_set_user_data(btn, (void *)(intptr_t)i);
+      lv_obj_add_event_cb(btn, library_cb, LV_EVENT_CLICKED, NULL);
+      lv_obj_add_flag(btn, LV_OBJ_FLAG_HIDDEN);
+
+      lv_obj_t *lbl = lv_label_create(btn);
+      lv_obj_set_style_text_font(lbl, FONT_CJK, 0);
+      lv_obj_set_style_text_color(lbl, lv_color_hex(0xffffff), 0);
+      lv_label_set_text(lbl, "");
+      lv_obj_center(lbl);
+
+      s_library_btns[i] = btn;
+      s_library_lbls[i] = lbl;
+    }
 }
 
 /* The big countdown, shown only while a session is running.  Must be called
@@ -666,6 +738,66 @@ static void prompt_show(const char *text)
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 215);
 }
 
+static void library_apply(const fm_session_t *sess)
+{
+  int count;
+  int i;
+
+  if (s_library_overlay == NULL)
+    {
+      return;
+    }
+
+  if (sess->state != FM_LIBRARY)
+    {
+      s_library_active = 0;
+      lv_obj_add_flag(s_library_overlay, LV_OBJ_FLAG_HIDDEN);
+      return;
+    }
+
+  if (!s_library_active)
+    {
+      s_library_selection = -1;
+      s_library_active = 1;
+    }
+
+  count = focus_storage_library_count();
+  if (count > FOCUS_LIBRARY_MAX)
+    {
+      count = FOCUS_LIBRARY_MAX;
+    }
+
+  lv_obj_clear_flag(s_library_overlay, LV_OBJ_FLAG_HIDDEN);
+  if (count <= 0)
+    {
+      lv_obj_clear_flag(s_library_empty_label, LV_OBJ_FLAG_HIDDEN);
+      for (i = 0; i < FOCUS_LIBRARY_MAX; i++)
+        {
+          lv_obj_add_flag(s_library_btns[i], LV_OBJ_FLAG_HIDDEN);
+        }
+      return;
+    }
+
+  lv_obj_add_flag(s_library_empty_label, LV_OBJ_FLAG_HIDDEN);
+  for (i = 0; i < FOCUS_LIBRARY_MAX; i++)
+    {
+      char title[FM_MAX_GOAL_LEN];
+
+      if (i >= count ||
+          focus_storage_library_title(i, title, sizeof(title)) != 0)
+        {
+          lv_obj_add_flag(s_library_btns[i], LV_OBJ_FLAG_HIDDEN);
+          continue;
+        }
+
+      lv_label_set_text(s_library_lbls[i], title);
+      lv_obj_set_style_bg_color(
+          s_library_btns[i],
+          lv_color_hex(i == s_library_selection ? 0x2070d0 : 0x2a3138), 0);
+      lv_obj_clear_flag(s_library_btns[i], LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
 static void duration_apply(const fm_session_t *sess)
 {
   if (s_duration_overlay == NULL)
@@ -730,6 +862,12 @@ static void ui_apply(const fm_session_t *sess)
       timer_hide();
       prompt_show("说出你想要完成的任务");
       lv_label_set_text(s_info_label, "我们一步步来");
+      break;
+
+    case FM_LIBRARY:
+      lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
+      timer_hide();
+      lv_label_set_text(s_info_label, "");
       break;
 
     case FM_PLANNING:
@@ -921,6 +1059,13 @@ static void ui_apply(const fm_session_t *sess)
                  "继续", 0x30a030, FM_UI_CMD_EXIT_CANCEL);
       break;
 
+    case FM_LIBRARY:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "进入任务", 0x30a030, FM_UI_CMD_LIBRARY_ENTER);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "回到主界面", 0x555c64, FM_UI_CMD_LIBRARY_BACK);
+      break;
+
     case FM_TASK_SELECT:
     case FM_DURATION_SELECT:
       btn_config(s_btn_primary, s_btn_primary_lbl, 0, NULL, 0,
@@ -990,6 +1135,7 @@ static void ui_apply(const fm_session_t *sess)
       break;
     }
 
+  library_apply(sess);
   duration_apply(sess);
   review_apply(sess);
 }
@@ -1137,6 +1283,17 @@ int focus_ui_take_duration(void)
   pthread_mutex_lock(&s_cmd_lock);
   result = s_duration_selected;
   s_duration_selected = 0;
+  pthread_mutex_unlock(&s_cmd_lock);
+  return result;
+}
+
+int focus_ui_take_library_selection(void)
+{
+  int result;
+
+  pthread_mutex_lock(&s_cmd_lock);
+  result = s_library_selection;
+  s_library_selection = -1;
   pthread_mutex_unlock(&s_cmd_lock);
   return result;
 }

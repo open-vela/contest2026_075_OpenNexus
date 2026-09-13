@@ -25,6 +25,19 @@
 #include "ui/focus_ui.h"
 
 static fm_session_t g_session;
+static int g_task_serial;
+
+static void next_task_name(char *out, int out_size)
+{
+  int n = g_task_serial++;
+
+  if (n < 26) {
+    snprintf(out, (size_t)out_size, "任务%c", 'A' + n);
+  } else {
+    snprintf(out, (size_t)out_size, "任务%c%c",
+             'A' + (n / 26 - 1), 'A' + (n % 26));
+  }
+}
 
 static void on_transition(fm_session_t *sess, fm_event_t evt)
 {
@@ -153,6 +166,10 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
     return "QUICKSTART";
   case FM_UI_CMD_LIBRARY:
     return "LIBRARY";
+  case FM_UI_CMD_LIBRARY_ENTER:
+    return "LIBRARY_ENTER";
+  case FM_UI_CMD_LIBRARY_BACK:
+    return "LIBRARY_BACK";
   case FM_UI_CMD_HOME:
     return "HOME";
   case FM_UI_CMD_END_ROUND:
@@ -300,28 +317,38 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     fm_state_handle_event(&g_session, FM_EVT_CANCEL);
     focus_storage_clear();
     break;
-  case FM_UI_CMD_QUICKSTART:
+  case FM_UI_CMD_QUICKSTART: {
+    char task_name[32];
+
     /* HOLD on the home screen always starts a new task.  Continuing an
      * unfinished task is an explicit LIBRARY action instead. */
     if (g_session.stage_count > 0 &&
         g_session.completed_task_count < g_session.stage_count) {
       focus_storage_save_to_library(&g_session);
     }
-    cmd_goal("专注", 0);
+    next_task_name(task_name, sizeof(task_name));
+    cmd_goal(task_name, 0);
     break;
+  }
   case FM_UI_CMD_HOME:
     fm_state_handle_event(&g_session, FM_EVT_HOME);
     break;
-  case FM_UI_CMD_LIBRARY: {
-    int count = focus_storage_library_count();
-    if (count > 0 &&
-        focus_storage_load_library(count - 1, &g_session) == 0) {
+  case FM_UI_CMD_LIBRARY:
+    fm_state_handle_event(&g_session, FM_EVT_LIBRARY_OPEN);
+    break;
+  case FM_UI_CMD_LIBRARY_ENTER: {
+    int selected = focus_ui_take_library_selection();
+    if (selected >= 0 &&
+        focus_storage_load_library(selected, &g_session) == 0) {
       fm_state_handle_event(&g_session, FM_EVT_RESTORE);
     } else {
-      focus_ui_notice("任务仓库中没有未完成任务");
+      focus_ui_notice("请先选择一个待完成任务");
     }
     break;
   }
+  case FM_UI_CMD_LIBRARY_BACK:
+    fm_state_handle_event(&g_session, FM_EVT_HOME);
+    break;
   case FM_UI_CMD_END_ROUND:
     fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
     break;
@@ -541,13 +568,7 @@ int main(int argc, char *argv[])
       } else if (strcmp(cmd, "home") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_HOME);
       } else if (strcmp(cmd, "library") == 0) {
-        int count = focus_storage_library_count();
-        if (count > 0 &&
-            focus_storage_load_library(count - 1, &g_session) == 0) {
-          fm_state_handle_event(&g_session, FM_EVT_RESTORE);
-        } else {
-          printf("[FocusMate] no unfinished task in library\n");
-        }
+        fm_state_handle_event(&g_session, FM_EVT_LIBRARY_OPEN);
       } else if (strcmp(cmd, "library_count") == 0) {
         printf("[FocusMate] library unfinished count: %d\n",
                focus_storage_library_count());

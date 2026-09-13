@@ -78,6 +78,8 @@ typedef enum
    * first hardware test showed. */
   FM_UI_CMD_QUICKSTART,
   FM_UI_CMD_LIBRARY,
+  FM_UI_CMD_LIBRARY_ENTER,
+  FM_UI_CMD_LIBRARY_BACK,
   FM_UI_CMD_HOME
 } fm_ui_cmd_t;
 
@@ -92,6 +94,9 @@ int focus_ui_take_review_selection(void);
 
 /* Return the pending focus-round length in minutes, or 0 when none. */
 int focus_ui_take_duration(void);
+
+/* Return the selected unfinished task index, or -1 when none. */
+int focus_ui_take_library_selection(void);
 
 /* True while the panel is up and accepting input. */
 

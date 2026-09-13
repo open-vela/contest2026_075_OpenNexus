@@ -19,6 +19,7 @@ const char *fm_state_name(fm_state_t state)
 {
   switch (state) {
   case FM_IDLE:           return "IDLE";
+  case FM_LIBRARY:        return "LIBRARY";
   case FM_PLANNING:       return "PLANNING";
   case FM_READY:          return "READY";
   case FM_EXIT_CONFIRM:   return "EXIT_CONFIRM";
@@ -44,6 +45,7 @@ const char *fm_event_name(fm_event_t evt)
   case FM_EVT_PLAN_READY:      return "PLAN_READY";
   case FM_EVT_PLAN_FAILED:     return "PLAN_FAILED";
   case FM_EVT_START:           return "START";
+  case FM_EVT_LIBRARY_OPEN:    return "LIBRARY_OPEN";
   case FM_EVT_TASK_SELECTED:   return "TASK_SELECTED";
   case FM_EVT_DURATION_SELECTED:return "DURATION_SELECTED";
   case FM_EVT_ROUND_CONTINUE:  return "ROUND_CONTINUE";
@@ -137,12 +139,22 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
   case FM_IDLE:
     if (evt == FM_EVT_GOAL_SUBMITTED) {
       next = FM_PLANNING;
+    } else if (evt == FM_EVT_LIBRARY_OPEN) {
+      next = FM_LIBRARY;
     } else if (evt == FM_EVT_START &&
                sess->stage_count > 0 &&
                sess->completed_task_count < sess->stage_count) {
       next = FM_TASK_SELECT;
     } else if (evt == FM_EVT_RESTORE && sess->stage_count > 0) {
       next = FM_RECOVERING;
+    }
+    break;
+
+  case FM_LIBRARY:
+    if (evt == FM_EVT_RESTORE && sess->stage_count > 0) {
+      next = FM_RECOVERING;
+    } else if (evt == FM_EVT_HOME || evt == FM_EVT_CANCEL) {
+      next = FM_IDLE;
     }
     break;
 
