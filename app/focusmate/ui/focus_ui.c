@@ -54,6 +54,8 @@
 
 #include <lvgl/lvgl.h>
 
+#include "focus_ui_home_image.h"
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -141,6 +143,7 @@ static lv_obj_t *s_timer_label;
 static lv_obj_t *s_bar;
 static lv_obj_t *s_info_label;
 static lv_obj_t *s_prompt_label;
+static lv_obj_t *s_home_image;
 static lv_obj_t *s_btn_primary;
 static lv_obj_t *s_btn_primary_lbl;
 static lv_obj_t *s_btn_stop;
@@ -519,6 +522,11 @@ static void ui_build(void)
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 180);
   lv_label_set_text(s_info_label, "待机中");
 
+  s_home_image = lv_image_create(scr);
+  lv_image_set_src(s_home_image, &img_home_robot_96);
+  lv_obj_align(s_home_image, LV_ALIGN_TOP_MID, 0, 60);
+  lv_obj_add_flag(s_home_image, LV_OBJ_FLAG_HIDDEN);
+
   s_prompt_label = lv_label_create(scr);
   lv_obj_set_style_text_font(s_prompt_label, FONT_CJK, 0);
   lv_obj_set_style_text_color(s_prompt_label, lv_color_hex(0xffffff), 0);
@@ -736,6 +744,23 @@ static void prompt_show(const char *text)
   lv_label_set_text(s_prompt_label, text);
   lv_obj_clear_flag(s_prompt_label, LV_OBJ_FLAG_HIDDEN);
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 215);
+}
+
+static void home_image_apply(const fm_session_t *sess)
+{
+  if (s_home_image == NULL)
+    {
+      return;
+    }
+
+  if (sess->state == FM_IDLE)
+    {
+      lv_obj_clear_flag(s_home_image, LV_OBJ_FLAG_HIDDEN);
+    }
+  else
+    {
+      lv_obj_add_flag(s_home_image, LV_OBJ_FLAG_HIDDEN);
+    }
 }
 
 static void library_apply(const fm_session_t *sess)
@@ -1135,6 +1160,7 @@ static void ui_apply(const fm_session_t *sess)
       break;
     }
 
+  home_image_apply(sess);
   library_apply(sess);
   duration_apply(sess);
   review_apply(sess);
