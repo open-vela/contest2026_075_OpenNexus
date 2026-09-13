@@ -937,9 +937,8 @@ static void ui_apply(const fm_session_t *sess)
 
     case FM_COMPLETED:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "新任务", 0x30a030, FM_UI_CMD_QUICKSTART);
-      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "首页", 0x555c64, FM_UI_CMD_HOME);
+                 "新任务", 0x30a030, FM_UI_CMD_HOME);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
       break;
 
     case FM_IDLE:
