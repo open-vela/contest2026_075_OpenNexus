@@ -300,12 +300,9 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     focus_storage_clear();
     break;
   case FM_UI_CMD_QUICKSTART:
-    if (g_session.stage_count > 0 &&
-        g_session.completed_task_count < g_session.stage_count) {
-      fm_state_handle_event(&g_session, FM_EVT_START);
-    } else {
-      cmd_goal("专注", 0);
-    }
+    /* HOLD on the home screen always starts a new task.  Continuing an
+     * unfinished task is an explicit LIBRARY action instead. */
+    cmd_goal("专注", 0);
     break;
   case FM_UI_CMD_HOME:
     fm_state_handle_event(&g_session, FM_EVT_HOME);
