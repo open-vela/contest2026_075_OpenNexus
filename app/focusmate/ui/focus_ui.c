@@ -861,8 +861,7 @@ static void ui_apply(const fm_session_t *sess)
       prompt_show("本轮任务完成了吗?");
       if (sess->review_reason == FM_REVIEW_MANUAL)
         {
-          lv_label_set_text(s_info_label,
-                            "提前结束计时\n是：记录完成  否：继续确认");
+          lv_label_set_text(s_info_label, "");
         }
       else if (sess->review_reason == FM_REVIEW_SETTLE)
         {
@@ -870,16 +869,14 @@ static void ui_apply(const fm_session_t *sess)
         }
       else
         {
-          lv_label_set_text(s_info_label,
-                            "本轮时间到\n是：记录完成  否：不记录");
+          lv_label_set_text(s_info_label, "本轮时间到");
         }
       break;
 
     case FM_ABANDON_CONFIRM:
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
-      lv_label_set_text(s_info_label,
-                        "是否放弃本轮?\nABANDON: 不记录任务\nCONTINUE: 继续计时");
+      lv_label_set_text(s_info_label, "是否放弃本轮番茄钟?");
       break;
 
     case FM_SETTLE_CONFIRM:
