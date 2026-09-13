@@ -125,7 +125,7 @@ static fm_state_t finish_review(fm_session_t *sess, fm_event_t evt)
 
   sess->current_stage = next;
   sess->stage_elapsed_seconds = 0;
-  return FM_READY;
+  return FM_IDLE;
 }
 
 fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
@@ -137,6 +137,10 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
   case FM_IDLE:
     if (evt == FM_EVT_GOAL_SUBMITTED) {
       next = FM_PLANNING;
+    } else if (evt == FM_EVT_START &&
+               sess->stage_count > 0 &&
+               sess->completed_task_count < sess->stage_count) {
+      next = FM_TASK_SELECT;
     } else if (evt == FM_EVT_RESTORE && sess->stage_count > 0) {
       next = FM_RECOVERING;
     }

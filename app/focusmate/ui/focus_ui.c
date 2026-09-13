@@ -691,7 +691,7 @@ static void ui_apply(const fm_session_t *sess)
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
       lv_label_set_text(s_info_label,
-                        "按住 HOLD 收音\nAI 拆解任务\n或进入任务仓库");
+                        "说出你想要完成的任务\n我们一步步来");
       break;
 
     case FM_PLANNING:
