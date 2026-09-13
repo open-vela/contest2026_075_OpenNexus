@@ -150,6 +150,10 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
     return "STOP";
   case FM_UI_CMD_QUICKSTART:
     return "QUICKSTART";
+  case FM_UI_CMD_LIBRARY:
+    return "LIBRARY";
+  case FM_UI_CMD_HOME:
+    return "HOME";
   case FM_UI_CMD_END_ROUND:
     return "END_ROUND";
   case FM_UI_CMD_ROUND_CONTINUE:
@@ -193,6 +197,7 @@ static void print_usage(void)
     "  review_none             task not completed this round\n"
     "  review_done             task completed this round\n"
     "  round_abandon           abandon current round without recording\n"
+    "  library                 open latest unfinished task library item\n"
     "  end_task                request full-task exit\n"
     "  exit_yes / exit_no      confirm or cancel full-task exit\n"
     "  settle                  request early settlement (-> SETTLE_CONFIRM)\n"
@@ -297,6 +302,17 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
   case FM_UI_CMD_QUICKSTART:
     cmd_goal("专注", 0);
     break;
+  case FM_UI_CMD_HOME:
+    fm_state_handle_event(&g_session, FM_EVT_HOME);
+    break;
+  case FM_UI_CMD_LIBRARY:
+    if (focus_storage_load_last_unfinished(&g_session) == 0 &&
+        g_session.stage_count > 0) {
+      fm_state_handle_event(&g_session, FM_EVT_RESTORE);
+    } else {
+      focus_ui_notice("任务仓库中没有未完成任务");
+    }
+    break;
   case FM_UI_CMD_END_ROUND:
     fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
     break;
@@ -374,22 +390,17 @@ int main(int argc, char *argv[])
   focus_timer_bind(&g_session);
   focus_timer_set_tick_cb(on_tick);
 
-  /* M8: try to restore an unfinished session saved across restarts. */
-  if (focus_storage_load(&g_session) == 0 && g_session.stage_count > 0) {
-    printf("\n[FocusMate] 检测到上一次专注任务尚未完成！\n");
-    printf("[FocusMate]     目标: %s\n",
-           g_session.goal[0] ? g_session.goal : "(无目标)");
-    if (g_session.current_stage >= 0 &&
-        g_session.current_stage < g_session.stage_count) {
-      printf("[FocusMate]     进行到: %s (第 %d/%d 阶段)，已专注 %d 秒\n",
-             g_session.stages[g_session.current_stage].title,
-             g_session.current_stage + 1, g_session.stage_count,
-             g_session.elapsed_seconds);
+  /* The start screen owns recovery now: do not jump directly into an old
+   * session, but tell the user when the task library has one available. */
+  fm_state_init(&g_session);
+  {
+    fm_session_t saved;
+    if (focus_storage_load_last_unfinished(&saved) == 0 &&
+        saved.stage_count > 0) {
+      printf("\n[FocusMate] 任务仓库中检测到未完成任务：%s\n",
+             saved.goal[0] ? saved.goal : "(无目标)");
+      printf("[FocusMate] 点击 LIBRARY 或输入 library 恢复。\n");
     }
-    printf("[FocusMate]     输入 resume 继续，cancel 放弃。\n");
-    fm_state_handle_event(&g_session, FM_EVT_RESTORE);
-  } else {
-    fm_state_init(&g_session);
   }
 
   printf("[FocusMate] state -> %s\n", fm_state_name(g_session.state));
@@ -518,6 +529,15 @@ int main(int argc, char *argv[])
         fm_state_handle_event(&g_session, FM_EVT_ROUND_CONTINUE);
       } else if (strcmp(cmd, "round_abandon") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_ROUND_ABANDON);
+      } else if (strcmp(cmd, "home") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_HOME);
+      } else if (strcmp(cmd, "library") == 0) {
+        if (focus_storage_load_last_unfinished(&g_session) == 0 &&
+            g_session.stage_count > 0) {
+          fm_state_handle_event(&g_session, FM_EVT_RESTORE);
+        } else {
+          printf("[FocusMate] no unfinished task in library\n");
+        }
       } else if (strcmp(cmd, "end_task") == 0 ||
                  strcmp(cmd, "exit_task") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_EXIT_REQUEST);

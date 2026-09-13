@@ -690,7 +690,8 @@ static void ui_apply(const fm_session_t *sess)
     case FM_IDLE:
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
-      lv_label_set_text(s_info_label, "把手机放好\n想好要做的事\n点一下就好");
+      lv_label_set_text(s_info_label,
+                        "按住 HOLD 收音\nAI 拆解任务\n或进入任务仓库");
       break;
 
     case FM_PLANNING:
@@ -965,13 +966,15 @@ static void ui_apply(const fm_session_t *sess)
     case FM_COMPLETED:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
                  "NEW", 0x30a030, FM_UI_CMD_QUICKSTART);
-      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "HOME", 0x555c64, FM_UI_CMD_HOME);
       break;
 
     case FM_IDLE:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "START", 0x30a030, FM_UI_CMD_QUICKSTART);
-      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+                 "HOLD", 0x30a030, FM_UI_CMD_QUICKSTART);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "LIBRARY", 0x2070d0, FM_UI_CMD_LIBRARY);
       break;
 
     default:

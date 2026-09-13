@@ -23,6 +23,9 @@ int focus_storage_save(const fm_session_t *sess);
 /* Load a session from disk. Returns 0 if a session was restored. */
 int focus_storage_load(fm_session_t *sess);
 
+/* Load the latest unfinished task from the history library. */
+int focus_storage_load_last_unfinished(fm_session_t *sess);
+
 /* Remove the saved session. */
 int focus_storage_clear(void);
 

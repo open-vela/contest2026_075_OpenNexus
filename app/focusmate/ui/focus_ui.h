@@ -76,7 +76,9 @@ typedef enum
    * caller should plan a default session and start it straight away.  Without
    * this the key would go dead after a long press, which is exactly what the
    * first hardware test showed. */
-  FM_UI_CMD_QUICKSTART
+  FM_UI_CMD_QUICKSTART,
+  FM_UI_CMD_LIBRARY,
+  FM_UI_CMD_HOME
 } fm_ui_cmd_t;
 
 /* Pop the pending button request, or FM_UI_CMD_NONE when there is none.

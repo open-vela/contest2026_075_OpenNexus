@@ -209,6 +209,90 @@ int focus_storage_load(fm_session_t *sess)
   return rc;
 }
 
+int focus_storage_load_last_unfinished(fm_session_t *sess)
+{
+  FILE *fp;
+  char *buf;
+  long len;
+  cJSON *root;
+  cJSON *hist;
+  int i;
+  int rc = -1;
+
+  if (!sess) {
+    return -1;
+  }
+
+  /* Prefer the current resumable session when it still has open tasks. */
+  if (focus_storage_load(sess) == 0 &&
+      sess->stage_count > 0 &&
+      sess->completed_task_count < sess->stage_count) {
+    for (i = 0; i < sess->stage_count && i < FM_MAX_STAGES; i++) {
+      if (!sess->stages[i].completed) {
+        sess->current_stage = i;
+        break;
+      }
+    }
+    return 0;
+  }
+
+  fp = fopen(FOCUS_HISTORY_FILE, "rb");
+  if (!fp) {
+    return -1;
+  }
+  fseek(fp, 0, SEEK_END);
+  len = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+  if (len <= 0 || len > 65536) {
+    fclose(fp);
+    return -1;
+  }
+  buf = malloc((size_t)len + 1);
+  if (!buf) {
+    fclose(fp);
+    return -1;
+  }
+  if (fread(buf, 1, (size_t)len, fp) != (size_t)len) {
+    free(buf);
+    fclose(fp);
+    return -1;
+  }
+  buf[len] = '\0';
+  fclose(fp);
+
+  root = cJSON_Parse(buf);
+  free(buf);
+  if (!root) {
+    return -1;
+  }
+
+  hist = cJSON_GetObjectItem(root, "history");
+  if (cJSON_IsArray(hist)) {
+    for (i = cJSON_GetArraySize(hist) - 1; i >= 0; i--) {
+      cJSON *entry = cJSON_GetArrayItem(hist, i);
+      cJSON *cc = cJSON_GetObjectItem(entry, "completed_task_count");
+      cJSON *sc = cJSON_GetObjectItem(entry, "stage_count");
+      if (!cJSON_IsNumber(cc) || !cJSON_IsNumber(sc) ||
+          cc->valueint >= sc->valueint) {
+        continue;
+      }
+      if (json_to_session(entry, sess) == 0) {
+        for (int j = 0; j < sess->stage_count && j < FM_MAX_STAGES; j++) {
+          if (!sess->stages[j].completed) {
+            sess->current_stage = j;
+            break;
+          }
+        }
+        rc = 0;
+        break;
+      }
+    }
+  }
+
+  cJSON_Delete(root);
+  return rc;
+}
+
 int focus_storage_clear(void)
 {
   remove(FOCUS_SESSION_FILE);

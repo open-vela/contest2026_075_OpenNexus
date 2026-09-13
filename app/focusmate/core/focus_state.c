@@ -63,6 +63,7 @@ const char *fm_event_name(fm_event_t evt)
   case FM_EVT_SETTLE_REQUEST:  return "SETTLE_REQUEST";
   case FM_EVT_SETTLE_CANCEL:   return "SETTLE_CANCEL";
   case FM_EVT_SETTLE_CONFIRM:  return "SETTLE_CONFIRM";
+  case FM_EVT_HOME:            return "HOME";
   case FM_EVT_RESTORE:         return "RESTORE";
   case FM_EVT_CANCEL:          return "CANCEL";
   default:                     return "UNKNOWN";
@@ -305,7 +306,7 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
     break;
 
   case FM_COMPLETED:
-    if (evt == FM_EVT_CANCEL) {
+    if (evt == FM_EVT_HOME || evt == FM_EVT_CANCEL) {
       next = FM_IDLE;
     }
     break;
