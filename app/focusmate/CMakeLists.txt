@@ -6,7 +6,7 @@
 # font.  The Kconfig switch CONFIG_LV_FONT_SIMSUN_16_CJK does not survive the
 # defconfig -> .config path on this board configuration, so LVGL's
 # lv_conf_internal.h falls through to its "#define LV_FONT_SIMSUN_16_CJK 0"
-# branch: optional font sources compile consistently on this board and every
+# branch: lv_font_simsun_16_cjk.c then compiles to an empty object and every
 # Chinese glyph renders as the "missing glyph" placeholder box.
 #
 # lv_conf_internal.h guards that macro with #ifndef, so defining it directly
@@ -33,7 +33,7 @@ if(CONFIG_LVX_USE_DEMO_FOCUSMATE)
       sensor/phone_sensor.c
       storage/focus_storage.c
       ui/focus_ui.c
-      ui/lv_font_ark_pixel_16_cjk.c
+      ui/lv_font_simsun_24_cjk.c
     INCLUDE_DIRECTORIES
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${NUTTX_APPS_DIR}/netutils/cjson/cJSON

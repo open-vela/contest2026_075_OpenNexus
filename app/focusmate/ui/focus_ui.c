@@ -123,9 +123,9 @@ static const char *focus_ui_fbdev_path(void)
  * console render too.
  */
 
-extern const lv_font_t lv_font_ark_pixel_16_cjk;
+extern const lv_font_t lv_font_simsun_24_cjk;
 
-#define FONT_CJK  (&lv_font_ark_pixel_16_cjk)
+#define FONT_CJK  (&lv_font_simsun_24_cjk)
 
 #define FM_STATE_COUNT  14
 
@@ -139,7 +139,6 @@ static lv_obj_t *s_timer_label;
 static lv_obj_t *s_bar;
 static lv_obj_t *s_info_label;
 static lv_obj_t *s_prompt_label;
-static lv_obj_t *s_prompt_bold_label;
 static lv_obj_t *s_btn_primary;
 static lv_obj_t *s_btn_primary_lbl;
 static lv_obj_t *s_btn_stop;
@@ -502,19 +501,6 @@ static void ui_build(void)
   lv_label_set_text(s_prompt_label, "");
   lv_obj_add_flag(s_prompt_label, LV_OBJ_FLAG_HIDDEN);
 
-  s_prompt_bold_label = lv_label_create(scr);
-  lv_obj_set_style_text_font(s_prompt_bold_label, FONT_CJK, 0);
-  lv_obj_set_style_text_color(s_prompt_bold_label, lv_color_hex(0xffffff), 0);
-  lv_obj_set_style_text_align(s_prompt_bold_label, LV_TEXT_ALIGN_CENTER, 0);
-  lv_obj_set_width(s_prompt_bold_label, 360);
-  lv_obj_set_style_transform_pivot_x(s_prompt_bold_label, 180, 0);
-  lv_obj_set_style_transform_pivot_y(s_prompt_bold_label, 0, 0);
-  lv_obj_set_style_transform_scale(s_prompt_bold_label,
-                                    UI_PROMPT_SCALE_LARGE, 0);
-  lv_obj_align(s_prompt_bold_label, LV_ALIGN_TOP_MID, 1, 168);
-  lv_label_set_text(s_prompt_bold_label, "");
-  lv_obj_add_flag(s_prompt_bold_label, LV_OBJ_FLAG_HIDDEN);
-
   /* On-screen controls.  The primary button means START / PAUSE / RESUME
    * depending on the state; STOP is the "give up" action. */
 
@@ -665,7 +651,6 @@ static void prompt_hide(void)
     }
 
   lv_obj_add_flag(s_prompt_label, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_add_flag(s_prompt_bold_label, LV_OBJ_FLAG_HIDDEN);
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 180);
 }
 
@@ -677,9 +662,7 @@ static void prompt_show(const char *text)
     }
 
   lv_label_set_text(s_prompt_label, text);
-  lv_label_set_text(s_prompt_bold_label, text);
   lv_obj_clear_flag(s_prompt_label, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_clear_flag(s_prompt_bold_label, LV_OBJ_FLAG_HIDDEN);
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 215);
 }
 
@@ -879,7 +862,7 @@ static void ui_apply(const fm_session_t *sess)
       if (sess->review_reason == FM_REVIEW_MANUAL)
         {
           lv_label_set_text(s_info_label,
-                            "提前结束计时\n是:记录完成  否:继续确认");
+                            "提前结束计时\n是：记录完成  否：继续确认");
         }
       else if (sess->review_reason == FM_REVIEW_SETTLE)
         {
@@ -888,7 +871,7 @@ static void ui_apply(const fm_session_t *sess)
       else
         {
           lv_label_set_text(s_info_label,
-                            "本轮时间到\n是:记录完成  否:不记录");
+                            "本轮时间到\n是：记录完成  否：不记录");
         }
       break;
 
