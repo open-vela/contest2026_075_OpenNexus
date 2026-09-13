@@ -726,49 +726,16 @@ static void ui_apply(const fm_session_t *sess)
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
       lv_label_set_text(s_info_label, "");
-      {
-        char tasks[512];
-        int off = 0;
-        int shown = 0;
-        int remaining = 0;
-        int n = sess->stage_count > FM_MAX_STAGES
-                    ? FM_MAX_STAGES : sess->stage_count;
-
-        for (int i = 0; i < n; i++)
-          {
-            if (!sess->stages[i].completed)
-              {
-                remaining++;
-              }
-          }
-
-        tasks[0] = '\0';
-        for (int i = 0; i < n; i++)
-          {
-            int wrote;
-
-            if (sess->stages[i].completed)
-              {
-                continue;
-              }
-
-            wrote = snprintf(tasks + off, sizeof(tasks) - off,
-                             "%d. %s%s", shown + 1, sess->stages[i].title,
-                             (shown + 1 < remaining) ? "\n" : "");
-            if (wrote < 0)
-              {
-                break;
-              }
-            off += wrote;
-            shown++;
-            if (off >= (int)sizeof(tasks))
-              {
-                tasks[sizeof(tasks) - 1] = '\0';
-                break;
-              }
-          }
-        lv_label_set_text(s_duration_task_label, tasks);
-      }
+      if (sess->current_stage >= 0 &&
+          sess->current_stage < sess->stage_count)
+        {
+          lv_label_set_text(s_duration_task_label,
+                            sess->stages[sess->current_stage].title);
+        }
+      else
+        {
+          lv_label_set_text(s_duration_task_label, "");
+        }
       break;
 
     case FM_FOCUSING:
