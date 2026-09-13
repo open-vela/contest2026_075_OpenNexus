@@ -125,7 +125,7 @@ static fm_state_t finish_review(fm_session_t *sess, fm_event_t evt)
 
   sess->current_stage = next;
   sess->stage_elapsed_seconds = 0;
-  return FM_IDLE;
+  return FM_READY;
 }
 
 fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
