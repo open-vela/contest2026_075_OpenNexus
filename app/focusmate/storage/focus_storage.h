@@ -10,6 +10,8 @@
 
 #include "core/focus_state.h"
 
+#define FOCUS_LIBRARY_MAX 4
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,6 +27,18 @@ int focus_storage_load(fm_session_t *sess);
 
 /* Load the latest unfinished task from the history library. */
 int focus_storage_load_last_unfinished(fm_session_t *sess);
+
+/* Save an unfinished task into the task library (maximum 4 entries). */
+int focus_storage_save_to_library(const fm_session_t *sess);
+
+/* Return the number of unfinished tasks currently in the library. */
+int focus_storage_library_count(void);
+
+/* Load unfinished task by index, newest entries last. */
+int focus_storage_load_library(int index, fm_session_t *sess);
+
+/* Copy the goal of unfinished task index into out. */
+int focus_storage_library_title(int index, char *out, int out_size);
 
 /* Remove the saved session. */
 int focus_storage_clear(void);

@@ -79,6 +79,7 @@ static void on_enter_state(fm_session_t *sess, fm_event_t evt)
     printf("[FocusMate] 专注 %d 分钟 | 中断 %d 次\n",
            sess->elapsed_seconds / 60, sess->interrupt_count);
     focus_storage_append_history(sess);
+    focus_storage_save_to_library(sess);
     if (sess->keep_for_resume) {
       focus_storage_save(sess);
       printf("[FocusMate] 任务已保留到后台任务库，可稍后恢复。\n");
@@ -302,19 +303,25 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
   case FM_UI_CMD_QUICKSTART:
     /* HOLD on the home screen always starts a new task.  Continuing an
      * unfinished task is an explicit LIBRARY action instead. */
+    if (g_session.stage_count > 0 &&
+        g_session.completed_task_count < g_session.stage_count) {
+      focus_storage_save_to_library(&g_session);
+    }
     cmd_goal("专注", 0);
     break;
   case FM_UI_CMD_HOME:
     fm_state_handle_event(&g_session, FM_EVT_HOME);
     break;
-  case FM_UI_CMD_LIBRARY:
-    if (focus_storage_load_last_unfinished(&g_session) == 0 &&
-        g_session.stage_count > 0) {
+  case FM_UI_CMD_LIBRARY: {
+    int count = focus_storage_library_count();
+    if (count > 0 &&
+        focus_storage_load_library(count - 1, &g_session) == 0) {
       fm_state_handle_event(&g_session, FM_EVT_RESTORE);
     } else {
       focus_ui_notice("任务仓库中没有未完成任务");
     }
     break;
+  }
   case FM_UI_CMD_END_ROUND:
     fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
     break;
@@ -534,11 +541,23 @@ int main(int argc, char *argv[])
       } else if (strcmp(cmd, "home") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_HOME);
       } else if (strcmp(cmd, "library") == 0) {
-        if (focus_storage_load_last_unfinished(&g_session) == 0 &&
-            g_session.stage_count > 0) {
+        int count = focus_storage_library_count();
+        if (count > 0 &&
+            focus_storage_load_library(count - 1, &g_session) == 0) {
           fm_state_handle_event(&g_session, FM_EVT_RESTORE);
         } else {
           printf("[FocusMate] no unfinished task in library\n");
+        }
+      } else if (strcmp(cmd, "library_count") == 0) {
+        printf("[FocusMate] library unfinished count: %d\n",
+               focus_storage_library_count());
+      } else if (strcmp(cmd, "library_load") == 0) {
+        char *nstr = strtok(NULL, " ");
+        int n = nstr ? atoi(nstr) : -1;
+        if (n >= 0 && focus_storage_load_library(n, &g_session) == 0) {
+          fm_state_handle_event(&g_session, FM_EVT_RESTORE);
+        } else {
+          printf("[FocusMate] library_load <index>\n");
         }
       } else if (strcmp(cmd, "end_task") == 0 ||
                  strcmp(cmd, "exit_task") == 0) {

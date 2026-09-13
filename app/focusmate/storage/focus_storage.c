@@ -24,6 +24,7 @@
 #define FOCUS_DATA_DIR CONFIG_FOCUSMATE_DATA_DIR
 #define FOCUS_SESSION_FILE FOCUS_DATA_DIR "/session.json"
 #define FOCUS_HISTORY_FILE FOCUS_DATA_DIR "/history.json"
+#define FOCUS_LIBRARY_FILE FOCUS_DATA_DIR "/library.json"
 
 static cJSON *stages_to_json(const fm_session_t *sess)
 {
@@ -376,4 +377,258 @@ int focus_storage_append_history(const fm_session_t *sess)
   }
   cJSON_Delete(root);
   return rc;
+}
+
+
+/* ── Unfinished task library (maximum 4 entries) ───────────────── */
+
+static cJSON *json_file_load(const char *path)
+{
+  FILE *fp;
+  char *buf;
+  long len;
+  cJSON *root;
+
+  fp = fopen(path, "rb");
+  if (!fp) {
+    return NULL;
+  }
+  fseek(fp, 0, SEEK_END);
+  len = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+  if (len <= 0 || len > 262144) {
+    fclose(fp);
+    return NULL;
+  }
+  buf = malloc((size_t)len + 1);
+  if (!buf) {
+    fclose(fp);
+    return NULL;
+  }
+  if (fread(buf, 1, (size_t)len, fp) != (size_t)len) {
+    free(buf);
+    fclose(fp);
+    return NULL;
+  }
+  buf[len] = '\0';
+  fclose(fp);
+  root = cJSON_Parse(buf);
+  free(buf);
+  return root;
+}
+
+static int json_file_write(const char *path, const cJSON *root)
+{
+  char *json;
+  FILE *fp;
+  int rc = -1;
+
+  json = cJSON_PrintUnformatted(root);
+  if (!json) {
+    return -1;
+  }
+  fp = fopen(path, "w");
+  if (fp) {
+    fputs(json, fp);
+    fclose(fp);
+    rc = 0;
+  }
+  free(json);
+  return rc;
+}
+
+static cJSON *library_tasks(cJSON **root_out)
+{
+  cJSON *root = json_file_load(FOCUS_LIBRARY_FILE);
+  cJSON *tasks;
+
+  if (!root) {
+    root = cJSON_CreateObject();
+  }
+  if (!root) {
+    return NULL;
+  }
+  tasks = cJSON_GetObjectItem(root, "tasks");
+  if (!cJSON_IsArray(tasks)) {
+    tasks = cJSON_AddArrayToObject(root, "tasks");
+  }
+  *root_out = root;
+  return tasks;
+}
+
+static int library_entry_unfinished(const cJSON *entry)
+{
+  cJSON *cc = cJSON_GetObjectItem(entry, "completed_task_count");
+  cJSON *sc = cJSON_GetObjectItem(entry, "stage_count");
+
+  return cJSON_IsNumber(cc) && cJSON_IsNumber(sc) &&
+         cc->valueint < sc->valueint;
+}
+
+static cJSON *session_to_library_entry(const fm_session_t *sess)
+{
+  cJSON *entry = cJSON_CreateObject();
+
+  if (!entry) {
+    return NULL;
+  }
+  cJSON_AddStringToObject(entry, "goal", sess->goal);
+  cJSON_AddNumberToObject(entry, "total_minutes", sess->total_minutes);
+  cJSON_AddNumberToObject(entry, "stage_count", sess->stage_count);
+  cJSON_AddNumberToObject(entry, "current_stage", sess->current_stage);
+  cJSON_AddNumberToObject(entry, "elapsed_seconds", sess->elapsed_seconds);
+  cJSON_AddNumberToObject(entry, "stage_elapsed_seconds",
+                          sess->stage_elapsed_seconds);
+  cJSON_AddNumberToObject(entry, "interrupt_count", sess->interrupt_count);
+  cJSON_AddNumberToObject(entry, "round_count", sess->round_count);
+  cJSON_AddNumberToObject(entry, "completed_task_count",
+                          sess->completed_task_count);
+  cJSON_AddBoolToObject(entry, "early_exit", sess->early_exit);
+  cJSON_AddBoolToObject(entry, "keep_for_resume", true);
+  cJSON_AddItemToObject(entry, "stages", stages_to_json(sess));
+  return entry;
+}
+
+int focus_storage_save_to_library(const fm_session_t *sess)
+{
+  cJSON *root;
+  cJSON *tasks;
+  cJSON *entry;
+  cJSON *item;
+  cJSON *goal;
+  int i;
+  int rc;
+
+  if (!sess || sess->stage_count <= 0) {
+    return -1;
+  }
+
+  tasks = library_tasks(&root);
+  if (!tasks) {
+    return -1;
+  }
+
+  /* Update by goal; a completed task is removed instead of stored. */
+  for (i = cJSON_GetArraySize(tasks) - 1; i >= 0; i--) {
+    item = cJSON_GetArrayItem(tasks, i);
+    goal = cJSON_GetObjectItem(item, "goal");
+    if (cJSON_IsString(goal) &&
+        strcmp(goal->valuestring, sess->goal) == 0) {
+      cJSON_DeleteItemFromArray(tasks, i);
+    }
+  }
+
+  if (sess->completed_task_count < sess->stage_count) {
+    while (cJSON_GetArraySize(tasks) >= FOCUS_LIBRARY_MAX) {
+      cJSON_DeleteItemFromArray(tasks, 0);
+    }
+    entry = session_to_library_entry(sess);
+    if (!entry) {
+      cJSON_Delete(root);
+      return -1;
+    }
+    cJSON_AddItemToArray(tasks, entry);
+  }
+
+  rc = json_file_write(FOCUS_LIBRARY_FILE, root);
+  cJSON_Delete(root);
+  return rc;
+}
+
+int focus_storage_library_count(void)
+{
+  cJSON *root = NULL;
+  cJSON *tasks = library_tasks(&root);
+  int count = 0;
+  int i;
+
+  if (!tasks) {
+    return 0;
+  }
+  for (i = 0; i < cJSON_GetArraySize(tasks); i++) {
+    if (library_entry_unfinished(cJSON_GetArrayItem(tasks, i))) {
+      count++;
+    }
+  }
+  cJSON_Delete(root);
+  return count;
+}
+
+int focus_storage_load_library(int index, fm_session_t *sess)
+{
+  cJSON *root = NULL;
+  cJSON *tasks = library_tasks(&root);
+  cJSON *entry;
+  int seen = 0;
+  int i;
+
+  if (!tasks || !sess || index < 0) {
+    if (root) {
+      cJSON_Delete(root);
+    }
+    return -1;
+  }
+
+  for (i = 0; i < cJSON_GetArraySize(tasks); i++) {
+    entry = cJSON_GetArrayItem(tasks, i);
+    if (!library_entry_unfinished(entry)) {
+      continue;
+    }
+    if (seen++ == index) {
+      if (json_to_session(entry, sess) == 0) {
+        if (sess->current_stage < 0 ||
+            sess->stages[sess->current_stage].completed) {
+          for (int j = 0; j < sess->stage_count && j < FM_MAX_STAGES; j++) {
+            if (!sess->stages[j].completed) {
+              sess->current_stage = j;
+              break;
+            }
+          }
+        }
+        cJSON_Delete(root);
+        return 0;
+      }
+      break;
+    }
+  }
+
+  cJSON_Delete(root);
+  return -1;
+}
+
+int focus_storage_library_title(int index, char *out, int out_size)
+{
+  cJSON *root = NULL;
+  cJSON *tasks = library_tasks(&root);
+  cJSON *entry;
+  cJSON *goal;
+  int seen = 0;
+  int i;
+
+  if (!tasks || !out || out_size <= 0 || index < 0) {
+    if (root) {
+      cJSON_Delete(root);
+    }
+    return -1;
+  }
+
+  for (i = 0; i < cJSON_GetArraySize(tasks); i++) {
+    entry = cJSON_GetArrayItem(tasks, i);
+    if (!library_entry_unfinished(entry)) {
+      continue;
+    }
+    if (seen++ == index) {
+      goal = cJSON_GetObjectItem(entry, "goal");
+      if (!cJSON_IsString(goal)) {
+        break;
+      }
+      strncpy(out, goal->valuestring, (size_t)out_size - 1);
+      out[out_size - 1] = '\0';
+      cJSON_Delete(root);
+      return 0;
+    }
+  }
+
+  cJSON_Delete(root);
+  return -1;
 }
