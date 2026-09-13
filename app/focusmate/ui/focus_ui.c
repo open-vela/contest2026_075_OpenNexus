@@ -126,7 +126,7 @@ extern const lv_font_t lv_font_simsun_24_cjk;
 
 #define FONT_CJK  (&lv_font_simsun_24_cjk)
 
-#define FM_STATE_COUNT  13
+#define FM_STATE_COUNT  14
 
 /****************************************************************************
  * Private Data
@@ -176,6 +176,7 @@ static const uint32_t s_state_colors[FM_STATE_COUNT] = {
   0x808080, /* IDLE              grey   */
   0xf0a000, /* PLANNING          amber  */
   0x30a030, /* READY             green  */
+  0xd02020, /* EXIT_CONFIRM      red    */
   0x20a060, /* TASK_SELECT       teal   */
   0x20a060, /* DURATION_SELECT   teal   */
   0x2070d0, /* FOCUSING          blue   */
@@ -707,6 +708,13 @@ static void ui_apply(const fm_session_t *sess)
       lv_label_set_text(s_info_label, buf);
       break;
 
+    case FM_EXIT_CONFIRM:
+      lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
+      timer_hide();
+      lv_label_set_text(s_info_label,
+                        "退出整个任务?\n未完成任务会保留\n可稍后恢复");
+      break;
+
     case FM_TASK_SELECT:
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
@@ -901,6 +909,13 @@ static void ui_apply(const fm_session_t *sess)
                  "START", 0x30a030, FM_UI_CMD_START);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
                  "EXIT", 0x555c64, FM_UI_CMD_EXIT);
+      break;
+
+    case FM_EXIT_CONFIRM:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "EXIT", 0xd02020, FM_UI_CMD_EXIT_CONFIRM);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "CONTINUE", 0x30a030, FM_UI_CMD_EXIT_CANCEL);
       break;
 
     case FM_TASK_SELECT:

@@ -157,7 +157,11 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
   case FM_UI_CMD_ROUND_ABANDON:
     return "ROUND_ABANDON";
   case FM_UI_CMD_EXIT:
-    return "EXIT";
+    return "EXIT_REQUEST";
+  case FM_UI_CMD_EXIT_CONFIRM:
+    return "EXIT_CONFIRM";
+  case FM_UI_CMD_EXIT_CANCEL:
+    return "EXIT_CANCEL";
   case FM_UI_CMD_REVIEW_YES:
     return "REVIEW_YES";
   case FM_UI_CMD_REVIEW_NONE:
@@ -189,7 +193,8 @@ static void print_usage(void)
     "  review_none             task not completed this round\n"
     "  review_done             task completed this round\n"
     "  round_abandon           abandon current round without recording\n"
-    "  end_task                exit current task and keep it for resume\n"
+    "  end_task                request full-task exit\n"
+    "  exit_yes / exit_no      confirm or cancel full-task exit\n"
     "  settle                  request early settlement (-> SETTLE_CONFIRM)\n"
     "  settle_yes / settle_no  confirm or cancel settlement\n"
     "  cancel                  abandon session\n"
@@ -302,7 +307,13 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     fm_state_handle_event(&g_session, FM_EVT_ROUND_ABANDON);
     break;
   case FM_UI_CMD_EXIT:
-    fm_state_handle_event(&g_session, FM_EVT_EXIT);
+    fm_state_handle_event(&g_session, FM_EVT_EXIT_REQUEST);
+    break;
+  case FM_UI_CMD_EXIT_CONFIRM:
+    fm_state_handle_event(&g_session, FM_EVT_EXIT_CONFIRM);
+    break;
+  case FM_UI_CMD_EXIT_CANCEL:
+    fm_state_handle_event(&g_session, FM_EVT_EXIT_CANCEL);
     break;
   case FM_UI_CMD_TASK_SELECTED: {
     int selected = focus_ui_take_review_selection();
@@ -509,7 +520,11 @@ int main(int argc, char *argv[])
         fm_state_handle_event(&g_session, FM_EVT_ROUND_ABANDON);
       } else if (strcmp(cmd, "end_task") == 0 ||
                  strcmp(cmd, "exit_task") == 0) {
-        fm_state_handle_event(&g_session, FM_EVT_EXIT);
+        fm_state_handle_event(&g_session, FM_EVT_EXIT_REQUEST);
+      } else if (strcmp(cmd, "exit_yes") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_EXIT_CONFIRM);
+      } else if (strcmp(cmd, "exit_no") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_EXIT_CANCEL);
       } else if (strcmp(cmd, "review_none") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_REVIEW_NONE);
       } else if (strcmp(cmd, "review_done") == 0) {
