@@ -305,7 +305,7 @@ static lv_obj_t *btn_make(lv_obj_t *parent,
   lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL);
 
   lbl = lv_label_create(btn);
-  lv_obj_set_style_text_font(lbl, &lv_font_montserrat_20, 0);
+  lv_obj_set_style_text_font(lbl, FONT_CJK, 0);
   lv_obj_set_style_text_color(lbl, lv_color_hex(0xffffff), 0);
   lv_label_set_text(lbl, "-");
   lv_obj_center(lbl);
@@ -561,9 +561,9 @@ static void ui_build(void)
         lv_obj_add_event_cb(btn, duration_cb, LV_EVENT_CLICKED, NULL);
 
         lv_obj_t *lbl = lv_label_create(btn);
-        lv_obj_set_style_text_font(lbl, &lv_font_montserrat_32, 0);
+        lv_obj_set_style_text_font(lbl, FONT_CJK, 0);
         lv_obj_set_style_text_color(lbl, lv_color_hex(0xffffff), 0);
-        snprintf(text, sizeof(text), "%dm", duration_values[i]);
+        snprintf(text, sizeof(text), "%d分", duration_values[i]);
         lv_label_set_text(lbl, text);
         lv_obj_center(lbl);
 
@@ -907,16 +907,16 @@ static void ui_apply(const fm_session_t *sess)
     {
     case FM_READY:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "START", 0x30a030, FM_UI_CMD_START);
+                 "开始", 0x30a030, FM_UI_CMD_START);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "EXIT", 0x555c64, FM_UI_CMD_EXIT);
+                 "退出", 0x555c64, FM_UI_CMD_EXIT);
       break;
 
     case FM_EXIT_CONFIRM:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "EXIT", 0xd02020, FM_UI_CMD_EXIT_CONFIRM);
+                 "退出", 0xd02020, FM_UI_CMD_EXIT_CONFIRM);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "CONTINUE", 0x30a030, FM_UI_CMD_EXIT_CANCEL);
+                 "继续", 0x30a030, FM_UI_CMD_EXIT_CANCEL);
       break;
 
     case FM_TASK_SELECT:
@@ -928,53 +928,58 @@ static void ui_apply(const fm_session_t *sess)
 
     case FM_FOCUSING:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "END", 0x2070d0, FM_UI_CMD_END_ROUND);
+                 "结束", 0x2070d0, FM_UI_CMD_END_ROUND);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "PAUSE", 0xd08020, FM_UI_CMD_PAUSE);
+                 "暂停", 0xd08020, FM_UI_CMD_PAUSE);
       break;
 
     case FM_PAUSED:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "继续", 0x20a060, FM_UI_CMD_RESUME);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+      break;
+
     case FM_INTERRUPTED:
     case FM_RECOVERING:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "RESUME", 0x20a060, FM_UI_CMD_RESUME);
+                 "继续", 0x20a060, FM_UI_CMD_RESUME);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "END", 0x555c64, FM_UI_CMD_END_ROUND);
+                 "结束", 0x555c64, FM_UI_CMD_END_ROUND);
       break;
 
     case FM_REVIEWING:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "YES", 0x30a030, FM_UI_CMD_REVIEW_YES);
+                 "是", 0x30a030, FM_UI_CMD_REVIEW_YES);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "NO", 0x555c64, FM_UI_CMD_REVIEW_NONE);
+                 "否", 0x555c64, FM_UI_CMD_REVIEW_NONE);
       break;
 
     case FM_ABANDON_CONFIRM:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "ABANDON", 0xd02020, FM_UI_CMD_ROUND_ABANDON);
+                 "放弃", 0xd02020, FM_UI_CMD_ROUND_ABANDON);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "CONTINUE", 0x30a030, FM_UI_CMD_ROUND_CONTINUE);
+                 "继续", 0x30a030, FM_UI_CMD_ROUND_CONTINUE);
       break;
 
     case FM_SETTLE_CONFIRM:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "SETTLE", 0xd02020, FM_UI_CMD_SETTLE_CONFIRM);
+                 "结算", 0xd02020, FM_UI_CMD_SETTLE_CONFIRM);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "CONTINUE", 0x30a030, FM_UI_CMD_SETTLE_CANCEL);
+                 "继续", 0x30a030, FM_UI_CMD_SETTLE_CANCEL);
       break;
 
     case FM_COMPLETED:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "NEW", 0x30a030, FM_UI_CMD_QUICKSTART);
+                 "新任务", 0x30a030, FM_UI_CMD_QUICKSTART);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "HOME", 0x555c64, FM_UI_CMD_HOME);
+                 "首页", 0x555c64, FM_UI_CMD_HOME);
       break;
 
     case FM_IDLE:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                 "HOLD", 0x30a030, FM_UI_CMD_QUICKSTART);
+                 "按住说话", 0x30a030, FM_UI_CMD_QUICKSTART);
       btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                 "LIBRARY", 0x2070d0, FM_UI_CMD_LIBRARY);
+                 "任务库", 0x2070d0, FM_UI_CMD_LIBRARY);
       break;
 
     default:
