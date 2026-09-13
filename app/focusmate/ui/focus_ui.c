@@ -86,8 +86,7 @@ static const char *focus_ui_fbdev_path(void)
  */
 
 #define UI_IDLE_MAX_MS   50
-#define UI_INFO_SCALE_NORMAL  256
-#define UI_INFO_SCALE_LARGE   320
+#define UI_PROMPT_SCALE_LARGE  320
 
 /* ---------------------------------------------------------------------------
  * Board key fallback
@@ -139,6 +138,7 @@ static lv_obj_t *s_state_label;
 static lv_obj_t *s_timer_label;
 static lv_obj_t *s_bar;
 static lv_obj_t *s_info_label;
+static lv_obj_t *s_prompt_label;
 static lv_obj_t *s_btn_primary;
 static lv_obj_t *s_btn_primary_lbl;
 static lv_obj_t *s_btn_stop;
@@ -486,10 +486,20 @@ static void ui_build(void)
   lv_obj_set_style_text_line_space(s_info_label, 10, 0);
   lv_label_set_long_mode(s_info_label, LV_LABEL_LONG_WRAP);
   lv_obj_set_width(s_info_label, 360);
-  lv_obj_set_style_transform_pivot_x(s_info_label, 180, 0);
-  lv_obj_set_style_transform_pivot_y(s_info_label, 0, 0);
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 180);
   lv_label_set_text(s_info_label, "待机中");
+
+  s_prompt_label = lv_label_create(scr);
+  lv_obj_set_style_text_font(s_prompt_label, FONT_CJK, 0);
+  lv_obj_set_style_text_color(s_prompt_label, lv_color_hex(0xffffff), 0);
+  lv_obj_set_style_text_align(s_prompt_label, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_set_width(s_prompt_label, 360);
+  lv_obj_set_style_transform_pivot_x(s_prompt_label, 180, 0);
+  lv_obj_set_style_transform_pivot_y(s_prompt_label, 0, 0);
+  lv_obj_set_style_transform_scale(s_prompt_label, UI_PROMPT_SCALE_LARGE, 0);
+  lv_obj_align(s_prompt_label, LV_ALIGN_TOP_MID, 0, 168);
+  lv_label_set_text(s_prompt_label, "");
+  lv_obj_add_flag(s_prompt_label, LV_OBJ_FLAG_HIDDEN);
 
   /* On-screen controls.  The primary button means START / PAUSE / RESUME
    * depending on the state; STOP is the "give up" action. */
@@ -633,6 +643,29 @@ static void review_apply(const fm_session_t *sess)
     }
 }
 
+static void prompt_hide(void)
+{
+  if (s_prompt_label == NULL)
+    {
+      return;
+    }
+
+  lv_obj_add_flag(s_prompt_label, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 180);
+}
+
+static void prompt_show(const char *text)
+{
+  if (s_prompt_label == NULL)
+    {
+      return;
+    }
+
+  lv_label_set_text(s_prompt_label, text);
+  lv_obj_clear_flag(s_prompt_label, LV_OBJ_FLAG_HIDDEN);
+  lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 215);
+}
+
 static void duration_apply(const fm_session_t *sess)
 {
   if (s_duration_overlay == NULL)
@@ -662,8 +695,7 @@ static void ui_apply(const fm_session_t *sess)
 
   /* Let the key thread know which action is the primary one right now. */
   s_cur_state = (int)sess->state;
-  lv_obj_set_style_transform_scale(s_info_label,
-                                    UI_INFO_SCALE_NORMAL, 0);
+  prompt_hide();
 
   if (sess->state < FM_STATE_COUNT)
     {
@@ -696,10 +728,8 @@ static void ui_apply(const fm_session_t *sess)
     case FM_IDLE:
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
-      lv_label_set_text(s_info_label,
-                        "说出你想要完成的任务\n我们一步步来");
-      lv_obj_set_style_transform_scale(s_info_label,
-                                        UI_INFO_SCALE_LARGE, 0);
+      prompt_show("说出你想要完成的任务");
+      lv_label_set_text(s_info_label, "我们一步步来");
       break;
 
     case FM_PLANNING:
@@ -720,10 +750,8 @@ static void ui_apply(const fm_session_t *sess)
     case FM_EXIT_CONFIRM:
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
-      lv_label_set_text(s_info_label,
-                        "退出整个任务?\n任务会储存在任务库中");
-      lv_obj_set_style_transform_scale(s_info_label,
-                                        UI_INFO_SCALE_LARGE, 0);
+      prompt_show("退出整个任务?");
+      lv_label_set_text(s_info_label, "任务会储存在任务库中");
       break;
 
     case FM_TASK_SELECT:
@@ -830,23 +858,21 @@ static void ui_apply(const fm_session_t *sess)
     case FM_REVIEWING:
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
+      prompt_show("本轮任务完成了吗?");
       if (sess->review_reason == FM_REVIEW_MANUAL)
         {
           lv_label_set_text(s_info_label,
-                            "提前结束计时\n本轮任务完成了吗?\n是：记录完成  否：继续确认");
+                            "提前结束计时\n是：记录完成  否：继续确认");
         }
       else if (sess->review_reason == FM_REVIEW_SETTLE)
         {
-          lv_label_set_text(s_info_label,
-                            "结束今日专注?\n本轮任务完成了吗?");
+          lv_label_set_text(s_info_label, "结束今日专注?");
         }
       else
         {
           lv_label_set_text(s_info_label,
-                            "本轮时间到\n本轮任务完成了吗?\n是：记录完成  否：不记录");
+                            "本轮时间到\n是：记录完成  否：不记录");
         }
-      lv_obj_set_style_transform_scale(s_info_label,
-                                        UI_INFO_SCALE_LARGE, 0);
       break;
 
     case FM_ABANDON_CONFIRM:
