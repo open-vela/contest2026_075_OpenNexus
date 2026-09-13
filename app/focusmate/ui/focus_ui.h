@@ -61,9 +61,10 @@ typedef enum
   FM_UI_CMD_CANCEL,
   FM_UI_CMD_END_ROUND,
   FM_UI_CMD_ROUND_CONTINUE,
+  FM_UI_CMD_ROUND_ABANDON,
   FM_UI_CMD_REVIEW_YES,
   FM_UI_CMD_REVIEW_NONE,
-  FM_UI_CMD_REVIEW_SELECTED,
+  FM_UI_CMD_TASK_SELECTED,
   FM_UI_CMD_SETTLE_REQUEST,
   FM_UI_CMD_SETTLE_CANCEL,
   FM_UI_CMD_SETTLE_CONFIRM,
@@ -80,9 +81,6 @@ typedef enum
  */
 
 fm_ui_cmd_t focus_ui_take_command(void);
-
-/* Show the task-selection layer for the current review round. */
-void focus_ui_enter_review_selection(const fm_session_t *sess);
 
 /* Return the selected stage index + 1, or 0 when none is pending. */
 int focus_ui_take_review_selection(void);

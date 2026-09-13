@@ -126,7 +126,7 @@ extern const lv_font_t lv_font_simsun_24_cjk;
 
 #define FONT_CJK  (&lv_font_simsun_24_cjk)
 
-#define FM_STATE_COUNT  11
+#define FM_STATE_COUNT  13
 
 /****************************************************************************
  * Private Data
@@ -146,7 +146,6 @@ static lv_obj_t *s_review_overlay;
 static lv_obj_t *s_review_title;
 static lv_obj_t *s_review_task_btns[FM_MAX_STAGES];
 static lv_obj_t *s_review_task_lbls[FM_MAX_STAGES];
-static int s_review_mode;
 static int s_review_selection;
 
 static lv_obj_t *s_duration_overlay;
@@ -174,17 +173,19 @@ static volatile int s_ready;
 static int s_touch_ok;
 
 static const uint32_t s_state_colors[FM_STATE_COUNT] = {
-  0x808080, /* IDLE            grey   */
-  0xf0a000, /* PLANNING        amber  */
-  0x30a030, /* READY           green  */
-  0x20a060, /* DURATION        teal   */
-  0x2070d0, /* FOCUSING        blue   */
-  0xd08020, /* PAUSED          orange */
-  0xd02020, /* INTERRUPTED     red    */
-  0x4090d0, /* RECOVERING      sky    */
-  0xf0a000, /* REVIEWING       amber  */
-  0xd02020, /* SETTLE_CONFIRM  red    */
-  0x20a060  /* COMPLETED       teal   */
+  0x808080, /* IDLE              grey   */
+  0xf0a000, /* PLANNING          amber  */
+  0x30a030, /* READY             green  */
+  0x20a060, /* TASK_SELECT       teal   */
+  0x20a060, /* DURATION_SELECT   teal   */
+  0x2070d0, /* FOCUSING          blue   */
+  0xd08020, /* PAUSED            orange */
+  0xd02020, /* INTERRUPTED       red    */
+  0x4090d0, /* RECOVERING        sky    */
+  0xf0a000, /* REVIEWING         amber  */
+  0xd02020, /* ABANDON_CONFIRM   red    */
+  0xd02020, /* SETTLE_CONFIRM    red    */
+  0x20a060  /* COMPLETED         teal   */
 };
 
 /****************************************************************************
@@ -250,7 +251,7 @@ static void review_task_cb(lv_event_t *e)
 
   pthread_mutex_lock(&s_cmd_lock);
   s_review_selection = idx;
-  s_pending_cmd = FM_UI_CMD_REVIEW_SELECTED;
+  s_pending_cmd = FM_UI_CMD_TASK_SELECTED;
   pthread_mutex_unlock(&s_cmd_lock);
 }
 
@@ -591,28 +592,33 @@ static void review_apply(const fm_session_t *sess)
       return;
     }
 
-  if (sess->state != FM_REVIEWING)
+  if (sess->state != FM_TASK_SELECT)
     {
-      s_review_mode = 0;
       s_review_selection = -1;
       lv_obj_add_flag(s_review_overlay, LV_OBJ_FLAG_HIDDEN);
       return;
     }
 
-  if (!s_review_mode)
-    {
-      lv_obj_add_flag(s_review_overlay, LV_OBJ_FLAG_HIDDEN);
-      return;
-    }
-
+  lv_label_set_text(s_review_title, "选择本轮要完成的任务");
   lv_obj_clear_flag(s_review_overlay, LV_OBJ_FLAG_HIDDEN);
   for (int i = 0; i < FM_MAX_STAGES; i++)
     {
       if (i < sess->stage_count && !sess->stages[i].completed)
         {
           char task[96];
-          snprintf(task, sizeof(task), "%d. %s", i + 1, sess->stages[i].title);
+          int shown = 1;
+
+          for (int j = 0; j < i; j++)
+            {
+              if (j < sess->stage_count && !sess->stages[j].completed)
+                {
+                  shown++;
+                }
+            }
+
+          snprintf(task, sizeof(task), "%d. %s", shown, sess->stages[i].title);
           lv_label_set_text(s_review_task_lbls[i], task);
+          lv_obj_set_user_data(s_review_task_btns[i], (void *)(intptr_t)i);
           lv_obj_clear_flag(s_review_task_btns[i], LV_OBJ_FLAG_HIDDEN);
         }
       else
@@ -696,9 +702,15 @@ static void ui_apply(const fm_session_t *sess)
       lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
       timer_hide();
       snprintf(buf, sizeof(buf),
-               "AI 已拆解为 %d 项\n点击 START 选择本轮时长",
+               "AI 已拆解为 %d 项\n点击 START 选择本轮任务",
                sess->stage_count);
       lv_label_set_text(s_info_label, buf);
+      break;
+
+    case FM_TASK_SELECT:
+      lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
+      timer_hide();
+      lv_label_set_text(s_info_label, "");
       break;
 
     case FM_DURATION_SELECT:
@@ -835,18 +847,25 @@ static void ui_apply(const fm_session_t *sess)
       if (sess->review_reason == FM_REVIEW_MANUAL)
         {
           lv_label_set_text(s_info_label,
-                            "结束本轮?\nDONE: 选择完成任务\nCONTINUE: 继续计时");
+                            "提前结束计时\n本轮任务完成了吗?\nYES: 记录完成  NO: 继续确认");
         }
       else if (sess->review_reason == FM_REVIEW_SETTLE)
         {
           lv_label_set_text(s_info_label,
-                            "结束今日专注?\n本轮是否完成任务?");
+                            "结束今日专注?\n本轮任务完成了吗?");
         }
       else
         {
           lv_label_set_text(s_info_label,
-                            "本轮时间到\n是否完成拆解任务?\nYES: 选择任务  NO: 再开一轮");
+                            "本轮时间到\n本轮任务完成了吗?\nYES: 记录完成  NO: 不记录");
         }
+      break;
+
+    case FM_ABANDON_CONFIRM:
+      lv_obj_add_flag(s_bar, LV_OBJ_FLAG_HIDDEN);
+      timer_hide();
+      lv_label_set_text(s_info_label,
+                        "是否放弃本轮?\nABANDON: 不记录任务\nCONTINUE: 继续计时");
       break;
 
     case FM_SETTLE_CONFIRM:
@@ -883,6 +902,7 @@ static void ui_apply(const fm_session_t *sess)
       btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
       break;
 
+    case FM_TASK_SELECT:
     case FM_DURATION_SELECT:
       btn_config(s_btn_primary, s_btn_primary_lbl, 0, NULL, 0,
                  FM_UI_CMD_NONE);
@@ -906,27 +926,17 @@ static void ui_apply(const fm_session_t *sess)
       break;
 
     case FM_REVIEWING:
-      if (s_review_mode)
-        {
-          btn_config(s_btn_primary, s_btn_primary_lbl, 0, NULL, 0,
-                     FM_UI_CMD_NONE);
-          btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0,
-                     FM_UI_CMD_NONE);
-        }
-      else if (sess->review_reason == FM_REVIEW_MANUAL)
-        {
-          btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                     "DONE", 0x30a030, FM_UI_CMD_REVIEW_YES);
-          btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                     "CONTINUE", 0x555c64, FM_UI_CMD_ROUND_CONTINUE);
-        }
-      else
-        {
-          btn_config(s_btn_primary, s_btn_primary_lbl, 1,
-                     "YES", 0x30a030, FM_UI_CMD_REVIEW_YES);
-          btn_config(s_btn_stop, s_btn_stop_lbl, 1,
-                     "NO", 0x555c64, FM_UI_CMD_REVIEW_NONE);
-        }
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "YES", 0x30a030, FM_UI_CMD_REVIEW_YES);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "NO", 0x555c64, FM_UI_CMD_REVIEW_NONE);
+      break;
+
+    case FM_ABANDON_CONFIRM:
+      btn_config(s_btn_primary, s_btn_primary_lbl, 1,
+                 "ABANDON", 0xd02020, FM_UI_CMD_ROUND_ABANDON);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "CONTINUE", 0x30a030, FM_UI_CMD_ROUND_CONTINUE);
       break;
 
     case FM_SETTLE_CONFIRM:
@@ -1081,18 +1091,6 @@ void focus_ui_refresh(const fm_session_t *sess)
       ui_apply(sess);
     }
 
-  pthread_mutex_unlock(&s_lock);
-}
-
-void focus_ui_enter_review_selection(const fm_session_t *sess)
-{
-  pthread_mutex_lock(&s_lock);
-  s_review_mode = 1;
-  s_review_selection = -1;
-  if (s_ready && sess != NULL)
-    {
-      ui_apply(sess);
-    }
   pthread_mutex_unlock(&s_lock);
 }
 

@@ -131,6 +131,8 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
   switch (c) {
   case FM_UI_CMD_START:
     return "START";
+  case FM_UI_CMD_TASK_SELECTED:
+    return "TASK_SELECTED";
   case FM_UI_CMD_DURATION_SELECTED:
     return "DURATION_SELECTED";
   case FM_UI_CMD_DURATION_CANCEL:
@@ -147,12 +149,12 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
     return "END_ROUND";
   case FM_UI_CMD_ROUND_CONTINUE:
     return "ROUND_CONTINUE";
+  case FM_UI_CMD_ROUND_ABANDON:
+    return "ROUND_ABANDON";
   case FM_UI_CMD_REVIEW_YES:
     return "REVIEW_YES";
   case FM_UI_CMD_REVIEW_NONE:
     return "REVIEW_NONE";
-  case FM_UI_CMD_REVIEW_SELECTED:
-    return "REVIEW_SELECTED";
   case FM_UI_CMD_SETTLE_REQUEST:
     return "SETTLE_REQUEST";
   case FM_UI_CMD_SETTLE_CANCEL:
@@ -170,14 +172,16 @@ static void print_usage(void)
     "FocusMate commands:\n"
     "  goal <text>             submit goal (-> PLANNING)\n"
     "  plan_ready              simulate AI plan ready (-> READY)\n"
-    "  start                   open focus-duration selection\n"
+    "  start                   open task selection\n"
+    "  task <1..4>             choose task for this round -> duration\n"
     "  duration <25|30|45|60>  select this round duration and start\n"
     "  pause / resume          pause / resume\n"
     "  removed / returned      mock phone removed / returned\n"
     "  round_end / stage_done  end current round manually -> REVIEWING\n"
     "  timeout                 simulate focus-round timeout -> REVIEWING\n"
-    "  review_none             no task completed (timeout review only)\n"
-    "  review_done <1..4>      mark task N completed this round\n"
+    "  review_none             task not completed this round\n"
+    "  review_done             task completed this round\n"
+    "  round_abandon           abandon current round without recording\n"
     "  settle                  request early settlement (-> SETTLE_CONFIRM)\n"
     "  settle_yes / settle_no  confirm or cancel settlement\n"
     "  cancel                  abandon session\n"
@@ -204,6 +208,8 @@ static void cmd_demo(void)
   }
 
   fm_state_handle_event(&g_session, FM_EVT_START);
+  g_session.current_stage = 0;
+  fm_state_handle_event(&g_session, FM_EVT_TASK_SELECTED);
   g_session.total_minutes = 25;
   fm_state_handle_event(&g_session, FM_EVT_DURATION_SELECTED);
   sleep(2);
@@ -215,7 +221,6 @@ static void cmd_demo(void)
   sleep(1);
   fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
   sleep(1);
-  g_session.last_round_completed = 1;
   fm_state_handle_event(&g_session, FM_EVT_REVIEW_DONE);
   printf("===== Demo v2 end =====\n");
 }
@@ -285,19 +290,22 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
   case FM_UI_CMD_ROUND_CONTINUE:
     fm_state_handle_event(&g_session, FM_EVT_ROUND_CONTINUE);
     break;
-  case FM_UI_CMD_REVIEW_YES:
-    focus_ui_enter_review_selection(&g_session);
+  case FM_UI_CMD_ROUND_ABANDON:
+    fm_state_handle_event(&g_session, FM_EVT_ROUND_ABANDON);
     break;
-  case FM_UI_CMD_REVIEW_SELECTED: {
+  case FM_UI_CMD_TASK_SELECTED: {
     int selected = focus_ui_take_review_selection();
-    if (selected >= 1 && selected <= g_session.stage_count) {
-      g_session.last_round_completed = selected;
-      fm_state_handle_event(&g_session, FM_EVT_REVIEW_DONE);
+    if (selected >= 1 && selected <= g_session.stage_count &&
+        !g_session.stages[selected - 1].completed) {
+      g_session.current_stage = selected - 1;
+      fm_state_handle_event(&g_session, FM_EVT_TASK_SELECTED);
     }
     break;
   }
+  case FM_UI_CMD_REVIEW_YES:
+    fm_state_handle_event(&g_session, FM_EVT_REVIEW_DONE);
+    break;
   case FM_UI_CMD_REVIEW_NONE:
-    g_session.last_round_completed = 0;
     fm_state_handle_event(&g_session, FM_EVT_REVIEW_NONE);
     break;
   case FM_UI_CMD_SETTLE_REQUEST:
@@ -451,6 +459,16 @@ int main(int argc, char *argv[])
       fm_state_handle_event(&g_session, FM_EVT_PLAN_READY);
     } else if (strcmp(cmd, "start") == 0) {
       fm_state_handle_event(&g_session, FM_EVT_START);
+    } else if (strcmp(cmd, "task") == 0) {
+      char *nstr = strtok(NULL, " ");
+      int n = nstr ? atoi(nstr) : 0;
+      if (n >= 1 && n <= g_session.stage_count &&
+          !g_session.stages[n - 1].completed) {
+        g_session.current_stage = n - 1;
+        fm_state_handle_event(&g_session, FM_EVT_TASK_SELECTED);
+      } else {
+        printf("[FocusMate] task <1..%d>\n", g_session.stage_count);
+      }
     } else if (strcmp(cmd, "duration") == 0) {
       char *minstr = strtok(NULL, " ");
       int minutes = minstr ? atoi(minstr) : 0;
@@ -474,20 +492,14 @@ int main(int argc, char *argv[])
       fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
     } else if (strcmp(cmd, "timeout") == 0) {
       fm_state_handle_event(&g_session, FM_EVT_STAGE_TIMEOUT);
-    } else if (strcmp(cmd, "round_continue") == 0) {
-      fm_state_handle_event(&g_session, FM_EVT_ROUND_CONTINUE);
-    } else if (strcmp(cmd, "review_none") == 0) {
-      g_session.last_round_completed = 0;
-      fm_state_handle_event(&g_session, FM_EVT_REVIEW_NONE);
-    } else if (strcmp(cmd, "review_done") == 0) {
-      char *nstr = strtok(NULL, " ");
-      int n = nstr ? atoi(nstr) : 0;
-      if (n >= 1 && n <= g_session.stage_count) {
-        g_session.last_round_completed = n;
+      } else if (strcmp(cmd, "round_continue") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_ROUND_CONTINUE);
+      } else if (strcmp(cmd, "round_abandon") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_ROUND_ABANDON);
+      } else if (strcmp(cmd, "review_none") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_REVIEW_NONE);
+      } else if (strcmp(cmd, "review_done") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_REVIEW_DONE);
-      } else {
-        printf("[FocusMate] review_done <1..%d>\n", g_session.stage_count);
-      }
     } else if (strcmp(cmd, "settle") == 0) {
       fm_state_handle_event(&g_session, FM_EVT_SETTLE_REQUEST);
     } else if (strcmp(cmd, "settle_yes") == 0) {

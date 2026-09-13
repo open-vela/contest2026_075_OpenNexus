@@ -21,12 +21,14 @@ const char *fm_state_name(fm_state_t state)
   case FM_IDLE:           return "IDLE";
   case FM_PLANNING:       return "PLANNING";
   case FM_READY:          return "READY";
+  case FM_TASK_SELECT:    return "TASK_SELECT";
   case FM_DURATION_SELECT:return "DURATION";
   case FM_FOCUSING:       return "FOCUSING";
   case FM_PAUSED:         return "PAUSED";
   case FM_INTERRUPTED:    return "INTERRUPTED";
   case FM_RECOVERING:     return "RECOVERING";
   case FM_REVIEWING:      return "REVIEWING";
+  case FM_ABANDON_CONFIRM:return "ABANDON_CONFIRM";
   case FM_SETTLE_CONFIRM: return "SETTLE_CONFIRM";
   case FM_COMPLETED:      return "COMPLETED";
   default:                return "UNKNOWN";
@@ -41,6 +43,7 @@ const char *fm_event_name(fm_event_t evt)
   case FM_EVT_PLAN_READY:      return "PLAN_READY";
   case FM_EVT_PLAN_FAILED:     return "PLAN_FAILED";
   case FM_EVT_START:           return "START";
+  case FM_EVT_TASK_SELECTED:   return "TASK_SELECTED";
   case FM_EVT_DURATION_SELECTED:return "DURATION_SELECTED";
   case FM_EVT_ROUND_CONTINUE:  return "ROUND_CONTINUE";
   case FM_EVT_PAUSE:           return "PAUSE";
@@ -52,6 +55,7 @@ const char *fm_event_name(fm_event_t evt)
   case FM_EVT_SESSION_FINISHED:return "SESSION_FINISHED";
   case FM_EVT_REVIEW_NONE:     return "REVIEW_NONE";
   case FM_EVT_REVIEW_DONE:     return "REVIEW_DONE";
+  case FM_EVT_ROUND_ABANDON:   return "ROUND_ABANDON";
   case FM_EVT_SETTLE_REQUEST:  return "SETTLE_REQUEST";
   case FM_EVT_SETTLE_CANCEL:   return "SETTLE_CANCEL";
   case FM_EVT_SETTLE_CONFIRM:  return "SETTLE_CONFIRM";
@@ -92,11 +96,10 @@ static fm_state_t finish_review(fm_session_t *sess, fm_event_t evt)
   int idx;
   int next;
 
-  if (evt == FM_EVT_REVIEW_DONE &&
-      sess->last_round_completed >= 1 &&
-      sess->last_round_completed <= sess->stage_count) {
-    idx = sess->last_round_completed - 1;
-    if (!sess->stages[idx].completed) {
+  if (evt == FM_EVT_REVIEW_DONE) {
+    idx = sess->current_stage;
+    if (idx >= 0 && idx < sess->stage_count &&
+        !sess->stages[idx].completed) {
       sess->stages[idx].completed = true;
       sess->completed_task_count++;
     }
@@ -148,7 +151,7 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
       if (idx < 0) {
         next = FM_COMPLETED;
       } else {
-        next = FM_DURATION_SELECT;
+        next = FM_TASK_SELECT;
       }
     } else if (evt == FM_EVT_SETTLE_REQUEST) {
       sess->state_before_settle = old;
@@ -158,16 +161,30 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
     }
     break;
 
+  case FM_TASK_SELECT:
+    if (evt == FM_EVT_TASK_SELECTED) {
+      if (sess->current_stage >= 0 &&
+          sess->current_stage < sess->stage_count &&
+          !sess->stages[sess->current_stage].completed) {
+        next = FM_DURATION_SELECT;
+      } else {
+        next = FM_READY;
+      }
+    } else if (evt == FM_EVT_CANCEL) {
+      next = FM_READY;
+    }
+    break;
+
   case FM_DURATION_SELECT:
     if (evt == FM_EVT_DURATION_SELECTED) {
-      int idx = next_uncompleted_stage(sess);
-      if (idx < 0) {
-        next = FM_COMPLETED;
-      } else {
-        sess->current_stage = idx;
+      if (sess->current_stage >= 0 &&
+          sess->current_stage < sess->stage_count &&
+          !sess->stages[sess->current_stage].completed) {
         sess->stage_elapsed_seconds = 0;
         sess->round_count++;
         next = FM_FOCUSING;
+      } else {
+        next = FM_READY;
       }
     } else if (evt == FM_EVT_CANCEL) {
       next = FM_READY;
@@ -235,12 +252,21 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
   case FM_REVIEWING:
     if (evt == FM_EVT_REVIEW_DONE) {
       next = finish_review(sess, evt);
-    } else if (evt == FM_EVT_REVIEW_NONE &&
-               (sess->review_reason == FM_REVIEW_TIMEOUT ||
-                sess->review_reason == FM_REVIEW_SETTLE)) {
-      next = finish_review(sess, evt);
-    } else if (evt == FM_EVT_ROUND_CONTINUE &&
-               sess->review_reason == FM_REVIEW_MANUAL) {
+    } else if (evt == FM_EVT_REVIEW_NONE) {
+      if (sess->review_reason == FM_REVIEW_MANUAL) {
+        next = FM_ABANDON_CONFIRM;
+      } else {
+        next = finish_review(sess, evt);
+      }
+    } else if (evt == FM_EVT_CANCEL) {
+      next = FM_IDLE;
+    }
+    break;
+
+  case FM_ABANDON_CONFIRM:
+    if (evt == FM_EVT_ROUND_ABANDON) {
+      next = finish_review(sess, FM_EVT_REVIEW_NONE);
+    } else if (evt == FM_EVT_ROUND_CONTINUE) {
       next = FM_FOCUSING;
     } else if (evt == FM_EVT_CANCEL) {
       next = FM_IDLE;
