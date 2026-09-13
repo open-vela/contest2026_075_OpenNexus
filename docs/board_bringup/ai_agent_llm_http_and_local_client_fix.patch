@@ -1,0 +1,73 @@
+diff --git a/include/agent_config.h b/include/agent_config.h
+index 711bb6d..8048033 100644
+--- a/include/agent_config.h
++++ b/include/agent_config.h
+@@ -293,6 +293,10 @@
+ #define AGENT_CHAN_FEISHU "feishu"
+ #define AGENT_CHAN_MQTT "mqtt"
+ #define AGENT_CHAN_WEIXIN "weixin"
++/* In-process app SDK channel (velaclaw_client_*).  Replies here are
++ * consumed one-shot by the registering app, so this channel must not
++ * carry "working" status chatter. */
++#define AGENT_CHAN_LOCAL_CLIENT "local_client"
+ #ifdef CONFIG_FEATURE_SYSTEM_VELACLAW
+ #define AGENT_CHAN_QUICKAPP "quickapp"
+ #endif
+diff --git a/src/core/agent_loop.c b/src/core/agent_loop.c
+index 3d9dec3..f3e0435 100644
+--- a/src/core/agent_loop.c
++++ b/src/core/agent_loop.c
+@@ -894,6 +894,7 @@ static void send_working_status(const agent_msg_t* msg, int iteration)
+     }
+     if (strcmp(msg->channel, AGENT_CHAN_FEISHU) == 0
+         || strcmp(msg->channel, AGENT_CHAN_VOICE) == 0
++        || strcmp(msg->channel, AGENT_CHAN_LOCAL_CLIENT) == 0
+ #ifdef CONFIG_FEATURE_SYSTEM_VELACLAW
+         || strcmp(msg->channel, AGENT_CHAN_QUICKAPP) == 0
+ #endif
+diff --git a/src/infra/vela_tls.c b/src/infra/vela_tls.c
+index 0b36760..5e91810 100644
+--- a/src/infra/vela_tls.c
++++ b/src/infra/vela_tls.c
+@@ -524,6 +524,23 @@ static void tls_raw_release(char* buf)
+     }
+ }
+ 
++/*
++ * True when a chunked body has been fully received.  The terminating
++ * zero-length chunk is "0" CRLF CRLF, and it always follows the CRLF that
++ * closes the previous chunk (or is the whole body when there were none).
++ *
++ * Without this the read loop below has no stop condition for a chunked
++ * reply: it keeps blocking until the server drops the keep-alive socket,
++ * which is what turned every LLM call into a 60 second wait.
++ */
++static bool resp_has_final_chunk(const char* buf, size_t len)
++{
++    if (len < 5 || memcmp(buf + len - 5, "0\r\n\r\n", 5) != 0)
++        return false;
++
++    return len == 5 || (len >= 7 && memcmp(buf + len - 7, "\r\n0\r\n\r\n", 7) == 0);
++}
++
+ static int tls_read_response(tls_ctx_t* ctx, char* resp_buf, size_t resp_cap,
+     size_t* out_body_len, bool* out_keep_alive)
+ {
+@@ -618,6 +635,8 @@ static int tls_read_response(tls_ctx_t* ctx, char* resp_buf, size_t resp_cap,
+                 resp_cap - 1 - resp_pos);
+             if (ret > 0) {
+                 resp_pos += (size_t)ret;
++                if (chunked && resp_has_final_chunk(resp_buf, resp_pos))
++                    break;
+             } else if (ret == 0 || ret == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
+                 break;
+             } else if (ret != MBEDTLS_ERR_SSL_WANT_READ) {
+@@ -984,6 +1003,8 @@ int vela_http_post_json(const char* host, const char* port, const char* path,
+             if (n <= 0)
+                 break;
+             resp_pos += (size_t)n;
++            if (chunked && resp_has_final_chunk(resp_buf, resp_pos))
++                break;
+         }
+     }
+     resp_buf[resp_pos] = '\0';

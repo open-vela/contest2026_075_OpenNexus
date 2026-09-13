@@ -42,7 +42,8 @@
 #define PLAN_REPLY_MAX 4096
 
 #ifndef CONFIG_FOCUSMATE_SKILL_DIR
-#define CONFIG_FOCUSMATE_SKILL_DIR "/data/agent/skills"
+/* Must match ai_agent's AGENT_SKILLS_DIR = "<data dir>/skills". */
+#define CONFIG_FOCUSMATE_SKILL_DIR "/data/ai_agent/skills"
 #endif
 
 static int focus_agent_install_skill(void)
@@ -96,12 +97,12 @@ static void ask_cb(int status, const char *text, void *cookie)
   }
   ctx->status = status;
   if (text && text[0]) {
-    /* Heuristic: a plan JSON starts with '{' */
-    const char *p = text;
-    while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') {
-      p++;
-    }
-    if (*p == '{') {
+    /* Heuristic: a plan is present when the reply carries a JSON object.
+     * The agent usually wraps it in a ```json fence even though the skill
+     * forbids that, so look for the braces instead of demanding a leading
+     * '{'. */
+    const char *p = strchr(text, '{');
+    if (p != NULL && strchr(p, '}') != NULL) {
       strncpy(ctx->reply, text, sizeof(ctx->reply) - 1);
       ctx->reply[sizeof(ctx->reply) - 1] = '\0';
       ctx->got_json = true;
@@ -212,13 +213,32 @@ bool focus_agent_is_connected(void)
 static int parse_plan_json(fm_session_t *sess, const char *json_str)
 {
   cJSON *root, *goal, *stages, *item;
+  char span[1024];
+  const char *open_brace, *close_brace;
+  size_t span_len;
   int i;
 
   if (!sess || !json_str || !json_str[0]) {
     return -1;
   }
 
-  root = cJSON_Parse(json_str);
+  /* Tolerate a markdown fence or a leading sentence: parse the outermost
+   * brace-delimited object and ignore everything around it. */
+  open_brace = strchr(json_str, '{');
+  close_brace = open_brace ? strrchr(open_brace, '}') : NULL;
+  if (open_brace == NULL || close_brace == NULL || close_brace < open_brace) {
+    syslog(LOG_WARNING, "[%s] plan reply carries no JSON object\n", TAG);
+    return -1;
+  }
+
+  span_len = (size_t)(close_brace - open_brace) + 1;
+  if (span_len >= sizeof(span)) {
+    span_len = sizeof(span) - 1;
+  }
+  memcpy(span, open_brace, span_len);
+  span[span_len] = '\0';
+
+  root = cJSON_Parse(span);
   if (!root) {
     syslog(LOG_WARNING, "[%s] plan JSON parse failed\n", TAG);
     return -1;

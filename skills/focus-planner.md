@@ -1,6 +1,6 @@
 # Focus Planner
 
-Turn a user goal into at most four executable focus tasks.
+Turn a user goal into 2-4 executable focus tasks. Use when the user wants to plan a focus session, break a goal down into tasks (任务拆解/拆解任务), start a Pomodoro (番茄钟), or turn a vague goal into concrete actionable steps.
 
 ## When to use
 

@@ -21,7 +21,11 @@ config FOCUSMATE_DATA_DIR
 
 config FOCUSMATE_SKILL_DIR
 	string "FocusMate ai_agent skill directory"
-	default "/data/agent/skills"
+	default "/data/ai_agent/skills"
+	---help---
+		Must match ai_agent's AGENT_SKILLS_DIR (<data dir>/skills/);
+		otherwise the skill lands somewhere the agent neither lists in
+		its prompt nor allows read_file to open.
 
 config FOCUSMATE_LCD_DEVPATH
 	string "FocusMate LCD device path"
