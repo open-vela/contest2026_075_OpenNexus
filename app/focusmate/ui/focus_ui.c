@@ -899,7 +899,8 @@ static void ui_apply(const fm_session_t *sess)
     case FM_READY:
       btn_config(s_btn_primary, s_btn_primary_lbl, 1,
                  "START", 0x30a030, FM_UI_CMD_START);
-      btn_config(s_btn_stop, s_btn_stop_lbl, 0, NULL, 0, FM_UI_CMD_NONE);
+      btn_config(s_btn_stop, s_btn_stop_lbl, 1,
+                 "EXIT", 0x555c64, FM_UI_CMD_EXIT);
       break;
 
     case FM_TASK_SELECT:

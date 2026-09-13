@@ -47,7 +47,7 @@ static cJSON *stages_to_json(const fm_session_t *sess)
 
 static int json_to_session(const cJSON *root, fm_session_t *sess)
 {
-  cJSON *goal, *total, *sc, *cur, *el, *sel, *ic, *rc, *cc, *ee, *arr, *st;
+  cJSON *goal, *total, *sc, *cur, *el, *sel, *ic, *rc, *cc, *ee, *keep, *arr, *st;
   int i, n;
 
   if (!root) {
@@ -63,6 +63,7 @@ static int json_to_session(const cJSON *root, fm_session_t *sess)
   rc = cJSON_GetObjectItem(root, "round_count");
   cc = cJSON_GetObjectItem(root, "completed_task_count");
   ee = cJSON_GetObjectItem(root, "early_exit");
+  keep = cJSON_GetObjectItem(root, "keep_for_resume");
   arr = cJSON_GetObjectItem(root, "stages");
 
   if (!cJSON_IsString(goal) || !cJSON_IsNumber(sc)) {
@@ -86,6 +87,8 @@ static int json_to_session(const cJSON *root, fm_session_t *sess)
   sess->round_count = cJSON_IsNumber(rc) ? (int)rc->valuedouble : 0;
   sess->completed_task_count = cJSON_IsNumber(cc) ? (int)cc->valuedouble : 0;
   sess->early_exit = cJSON_IsBool(ee) ? cJSON_IsTrue(ee) : false;
+  sess->keep_for_resume =
+      cJSON_IsBool(keep) ? cJSON_IsTrue(keep) : false;
 
   if (cJSON_IsArray(arr)) {
     for (i = 0; i < n && i < FM_MAX_STAGES; i++) {
@@ -145,6 +148,7 @@ int focus_storage_save(const fm_session_t *sess)
   cJSON_AddNumberToObject(root, "completed_task_count",
                           sess->completed_task_count);
   cJSON_AddBoolToObject(root, "early_exit", sess->early_exit);
+  cJSON_AddBoolToObject(root, "keep_for_resume", sess->keep_for_resume);
   cJSON_AddItemToObject(root, "stages", stages_to_json(sess));
 
   json_str = cJSON_PrintUnformatted(root);
@@ -268,6 +272,7 @@ int focus_storage_append_history(const fm_session_t *sess)
     cJSON_AddNumberToObject(entry, "completed_task_count",
                             sess->completed_task_count);
     cJSON_AddBoolToObject(entry, "early_exit", sess->early_exit);
+    cJSON_AddBoolToObject(entry, "keep_for_resume", sess->keep_for_resume);
     cJSON_AddItemToObject(entry, "stages", stages_to_json(sess));
     cJSON_AddItemToArray(hist, entry);
   }

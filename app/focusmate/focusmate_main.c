@@ -79,7 +79,12 @@ static void on_enter_state(fm_session_t *sess, fm_event_t evt)
     printf("[FocusMate] 专注 %d 分钟 | 中断 %d 次\n",
            sess->elapsed_seconds / 60, sess->interrupt_count);
     focus_storage_append_history(sess);
-    focus_storage_clear();
+    if (sess->keep_for_resume) {
+      focus_storage_save(sess);
+      printf("[FocusMate] 任务已保留到后台任务库，可稍后恢复。\n");
+    } else {
+      focus_storage_clear();
+    }
     break;
 
   default:
@@ -151,6 +156,8 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
     return "ROUND_CONTINUE";
   case FM_UI_CMD_ROUND_ABANDON:
     return "ROUND_ABANDON";
+  case FM_UI_CMD_EXIT:
+    return "EXIT";
   case FM_UI_CMD_REVIEW_YES:
     return "REVIEW_YES";
   case FM_UI_CMD_REVIEW_NONE:
@@ -182,6 +189,7 @@ static void print_usage(void)
     "  review_none             task not completed this round\n"
     "  review_done             task completed this round\n"
     "  round_abandon           abandon current round without recording\n"
+    "  end_task                exit current task and keep it for resume\n"
     "  settle                  request early settlement (-> SETTLE_CONFIRM)\n"
     "  settle_yes / settle_no  confirm or cancel settlement\n"
     "  cancel                  abandon session\n"
@@ -292,6 +300,9 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     break;
   case FM_UI_CMD_ROUND_ABANDON:
     fm_state_handle_event(&g_session, FM_EVT_ROUND_ABANDON);
+    break;
+  case FM_UI_CMD_EXIT:
+    fm_state_handle_event(&g_session, FM_EVT_EXIT);
     break;
   case FM_UI_CMD_TASK_SELECTED: {
     int selected = focus_ui_take_review_selection();
@@ -487,41 +498,46 @@ int main(int argc, char *argv[])
       phone_sensor_mock_removed(&g_session);
     } else if (strcmp(cmd, "returned") == 0) {
       phone_sensor_mock_returned(&g_session);
-    } else if (strcmp(cmd, "stage_done") == 0 ||
-               strcmp(cmd, "round_end") == 0) {
-      fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
-    } else if (strcmp(cmd, "timeout") == 0) {
-      fm_state_handle_event(&g_session, FM_EVT_STAGE_TIMEOUT);
+      } else if (strcmp(cmd, "stage_done") == 0 ||
+                 strcmp(cmd, "round_end") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_ROUND_END);
+      } else if (strcmp(cmd, "timeout") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_STAGE_TIMEOUT);
       } else if (strcmp(cmd, "round_continue") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_ROUND_CONTINUE);
       } else if (strcmp(cmd, "round_abandon") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_ROUND_ABANDON);
+      } else if (strcmp(cmd, "end_task") == 0 ||
+                 strcmp(cmd, "exit_task") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_EXIT);
       } else if (strcmp(cmd, "review_none") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_REVIEW_NONE);
       } else if (strcmp(cmd, "review_done") == 0) {
         fm_state_handle_event(&g_session, FM_EVT_REVIEW_DONE);
-    } else if (strcmp(cmd, "settle") == 0) {
-      fm_state_handle_event(&g_session, FM_EVT_SETTLE_REQUEST);
-    } else if (strcmp(cmd, "settle_yes") == 0) {
-      fm_state_handle_event(&g_session, FM_EVT_SETTLE_CONFIRM);
-    } else if (strcmp(cmd, "settle_no") == 0) {
-      fm_state_handle_event(&g_session, FM_EVT_SETTLE_CANCEL);
-    } else if (strcmp(cmd, "cancel") == 0) {
-      fm_state_handle_event(&g_session, FM_EVT_CANCEL);
-      focus_storage_clear();
-    } else if (strcmp(cmd, "save") == 0) {
-      focus_storage_save(&g_session);
-      printf("[FocusMate] session saved\n");
-    } else if (strcmp(cmd, "restore") == 0) {
-      if (focus_storage_load(&g_session) == 0 && g_session.stage_count > 0) {
-        fm_state_handle_event(&g_session, FM_EVT_RESTORE);
+      } else if (strcmp(cmd, "settle") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_SETTLE_REQUEST);
+      } else if (strcmp(cmd, "settle_yes") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_SETTLE_CONFIRM);
+      } else if (strcmp(cmd, "settle_no") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_SETTLE_CANCEL);
+      } else if (strcmp(cmd, "cancel") == 0) {
+        fm_state_handle_event(&g_session, FM_EVT_CANCEL);
+        focus_storage_clear();
+      } else if (strcmp(cmd, "save") == 0) {
+        focus_storage_save(&g_session);
+        printf("[FocusMate] session saved\n");
+      } else if (strcmp(cmd, "restore") == 0 ||
+                 strcmp(cmd, "resume_last") == 0) {
+        if (focus_storage_load(&g_session) == 0 &&
+            g_session.stage_count > 0) {
+          fm_state_handle_event(&g_session, FM_EVT_RESTORE);
+        } else {
+          printf("[FocusMate] nothing to restore\n");
+        }
       } else {
-        printf("[FocusMate] nothing to restore\n");
+        printf("Unknown command: %s (type 'help')\n", cmd);
       }
-    } else {
-      printf("Unknown command: %s (type 'help')\n", cmd);
     }
-  }
 
   focus_ui_deinit();
   printf("FocusMate exiting\n");

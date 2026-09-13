@@ -49,6 +49,7 @@ typedef enum {
   FM_EVT_REVIEW_NONE,
   FM_EVT_REVIEW_DONE,
   FM_EVT_ROUND_ABANDON,
+  FM_EVT_EXIT,
   FM_EVT_SETTLE_REQUEST,
   FM_EVT_SETTLE_CANCEL,
   FM_EVT_SETTLE_CONFIRM,
@@ -87,6 +88,7 @@ typedef struct {
   int last_round_completed; /* 0 = none, otherwise stage index + 1 */
   bool settlement_pending;
   bool early_exit;
+  bool keep_for_resume;
   fm_review_reason_t review_reason;
   fm_state_t state_before_settle;
   fm_state_t state;

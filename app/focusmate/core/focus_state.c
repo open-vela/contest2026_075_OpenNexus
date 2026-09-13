@@ -56,6 +56,7 @@ const char *fm_event_name(fm_event_t evt)
   case FM_EVT_REVIEW_NONE:     return "REVIEW_NONE";
   case FM_EVT_REVIEW_DONE:     return "REVIEW_DONE";
   case FM_EVT_ROUND_ABANDON:   return "ROUND_ABANDON";
+  case FM_EVT_EXIT:            return "EXIT";
   case FM_EVT_SETTLE_REQUEST:  return "SETTLE_REQUEST";
   case FM_EVT_SETTLE_CANCEL:   return "SETTLE_CANCEL";
   case FM_EVT_SETTLE_CONFIRM:  return "SETTLE_CONFIRM";
@@ -153,6 +154,10 @@ fm_state_t fm_state_handle_event(fm_session_t *sess, fm_event_t evt)
       } else {
         next = FM_TASK_SELECT;
       }
+    } else if (evt == FM_EVT_EXIT) {
+      sess->early_exit = true;
+      sess->keep_for_resume = true;
+      next = FM_COMPLETED;
     } else if (evt == FM_EVT_SETTLE_REQUEST) {
       sess->state_before_settle = old;
       next = FM_SETTLE_CONFIRM;
