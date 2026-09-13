@@ -54,7 +54,7 @@
 
 #include <lvgl/lvgl.h>
 
-#include "focus_ui_home_image.h"
+#include "focus_ui_images.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -143,7 +143,7 @@ static lv_obj_t *s_timer_label;
 static lv_obj_t *s_bar;
 static lv_obj_t *s_info_label;
 static lv_obj_t *s_prompt_label;
-static lv_obj_t *s_home_image;
+static lv_obj_t *s_scene_image;
 static lv_obj_t *s_btn_primary;
 static lv_obj_t *s_btn_primary_lbl;
 static lv_obj_t *s_btn_stop;
@@ -522,10 +522,16 @@ static void ui_build(void)
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 180);
   lv_label_set_text(s_info_label, "待机中");
 
-  s_home_image = lv_image_create(scr);
-  lv_image_set_src(s_home_image, &img_home_robot_96);
-  lv_obj_align(s_home_image, LV_ALIGN_TOP_MID, 0, 60);
-  lv_obj_add_flag(s_home_image, LV_OBJ_FLAG_HIDDEN);
+  /* Scene artwork.  One widget is reused for every page that carries a
+   * picture; scene_image_apply() swaps the bitmap and hides the widget on the
+   * pages that have none.  The band between the status line and the prompt is
+   * the only strip that is free on all five pages, so the art lives there.
+   */
+
+  s_scene_image = lv_image_create(scr);
+  lv_image_set_src(s_scene_image, &img_scene_home);
+  lv_obj_align(s_scene_image, LV_ALIGN_TOP_MID, 0, 70);
+  lv_obj_add_flag(s_scene_image, LV_OBJ_FLAG_HIDDEN);
 
   s_prompt_label = lv_label_create(scr);
   lv_obj_set_style_text_font(s_prompt_label, FONT_CJK, 0);
@@ -746,20 +752,48 @@ static void prompt_show(const char *text)
   lv_obj_align(s_info_label, LV_ALIGN_TOP_MID, 0, 215);
 }
 
-static void home_image_apply(const fm_session_t *sess)
+static const lv_image_dsc_t *scene_image_for_state(fm_state_t state)
 {
-  if (s_home_image == NULL)
+  switch (state)
+    {
+    case FM_IDLE:
+      return &img_scene_home;
+
+    case FM_READY:
+      return &img_scene_start;
+
+    case FM_REVIEWING:
+      return &img_scene_finish;
+
+    case FM_ABANDON_CONFIRM:
+      return &img_scene_giveup;
+
+    case FM_EXIT_CONFIRM:
+      return &img_scene_store;
+
+    default:
+      return NULL;
+    }
+}
+
+static void scene_image_apply(const fm_session_t *sess)
+{
+  const lv_image_dsc_t *src;
+
+  if (s_scene_image == NULL)
     {
       return;
     }
 
-  if (sess->state == FM_IDLE)
+  src = scene_image_for_state(sess->state);
+  if (src == NULL)
     {
-      lv_obj_clear_flag(s_home_image, LV_OBJ_FLAG_HIDDEN);
+      lv_obj_add_flag(s_scene_image, LV_OBJ_FLAG_HIDDEN);
     }
   else
     {
-      lv_obj_add_flag(s_home_image, LV_OBJ_FLAG_HIDDEN);
+      lv_image_set_src(s_scene_image, src);
+      lv_obj_clear_flag(s_scene_image, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -1160,7 +1194,7 @@ static void ui_apply(const fm_session_t *sess)
       break;
     }
 
-  home_image_apply(sess);
+  scene_image_apply(sess);
   library_apply(sess);
   duration_apply(sess);
   review_apply(sess);
