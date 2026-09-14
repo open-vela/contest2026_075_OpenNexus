@@ -1,0 +1,19 @@
+diff --git a/boards/vela/scripts/Make.defs b/boards/vela/scripts/Make.defs
+index 824d0c1..2b781c4 100644
+--- a/boards/vela/scripts/Make.defs
++++ b/boards/vela/scripts/Make.defs
+@@ -56,7 +56,13 @@ NXFLATLDFLAGS1 = -r -d -warn-common
+ NXFLATLDFLAGS2 = $(NXFLATLDFLAGS1) -T$(TOPDIR)$(DELIM)binfmt$(DELIM)libnxflat$(DELIM)gnu-nxflat-pcrel.ld -no-check-sections
+ LDNXFLATFLAGS = -e main -s 2048
+ 
+-EXTRA_LIBS += $(wildcard $(shell readlink -f $(TOPDIR)/$(CONFIG_ARCH_BOARD_CUSTOM_DIR)/libs/$(CONFIG_ARCH_BOARD_CUSTOM_NAME))/*.a)
++BOARD_CUSTOM_DIR := $(subst ",,$(CONFIG_ARCH_BOARD_CUSTOM_DIR))
++BOARD_CUSTOM_NAME := $(subst ",,$(CONFIG_ARCH_BOARD_CUSTOM_NAME))
++BOARD_CUSTOM_LIBDIR := $(TOPDIR)/$(BOARD_CUSTOM_DIR)/libs/$(BOARD_CUSTOM_NAME)
++ifeq ($(wildcard $(BOARD_CUSTOM_LIBDIR)),)
++BOARD_CUSTOM_LIBDIR := $(TOPDIR)/$(BOARD_CUSTOM_DIR)/libs/$(BOARD_CUSTOM_NAME)_cmake
++endif
++EXTRA_LIBS += $(wildcard $(BOARD_CUSTOM_LIBDIR)/*.a)
+ 
+ define POSTBUILD
+ 	$(Q)echo "Generating: vela_system.bin";
