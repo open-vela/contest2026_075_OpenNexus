@@ -36,6 +36,8 @@
 
 #include "focus_ui.h"
 
+#include <nuttx/config.h>
+
 #include "storage/focus_storage.h"
 
 #include <errno.h>
@@ -256,6 +258,7 @@ static void btn_event_cb(lv_event_t *e)
       return;
     }
 
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
   /* The home button is push-to-talk.  Convert its press lifecycle into
    * explicit start/stop commands; the click that follows RELEASED must not
    * create a synthetic task. */
@@ -279,6 +282,12 @@ static void btn_event_cb(lv_event_t *e)
     {
       return;
     }
+#else
+  if (code != LV_EVENT_CLICKED)
+    {
+      return;
+    }
+#endif
 
   pthread_mutex_lock(&s_cmd_lock);
   s_pending_cmd = cmd;

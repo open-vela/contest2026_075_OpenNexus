@@ -17,16 +17,36 @@
 #include <unistd.h>
 #include <sys/select.h>
 
+#include <nuttx/config.h>
+
 #include "core/focus_state.h"
 #include "core/focus_timer.h"
 #include "agent/focus_agent.h"
 #include "sensor/phone_sensor.h"
 #include "storage/focus_storage.h"
 #include "ui/focus_ui.h"
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
 #include "voice/voice_channel.h"
+#endif
 
 static fm_session_t g_session;
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
 static int g_voice_active;
+#else
+static int g_task_serial;
+
+static void next_task_name(char *out, int out_size)
+{
+  int n = g_task_serial++;
+
+  if (n < 26) {
+    snprintf(out, (size_t)out_size, "任务%c", 'A' + n);
+  } else {
+    snprintf(out, (size_t)out_size, "任务%c%c",
+             'A' + (n / 26 - 1), 'A' + (n % 26));
+  }
+}
+#endif
 
 static void on_transition(fm_session_t *sess, fm_event_t evt)
 {
@@ -258,6 +278,7 @@ static void cmd_demo(void)
   printf("===== Demo v2 end =====\n");
 }
 
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
 static void voice_capture_start(void)
 {
   if (g_voice_active) {
@@ -274,8 +295,6 @@ static void voice_capture_start(void)
     printf("[FocusMate] voice capture start failed: %d\n", ret);
   }
 }
-
-static void cmd_goal(const char *text, int minutes);
 
 static void voice_capture_finish(void)
 {
@@ -297,6 +316,17 @@ static void voice_capture_finish(void)
     printf("[FocusMate] voice recognition empty (ret=%d)\n", ret);
   }
 }
+#else
+static void voice_capture_start(void)
+{
+  focus_ui_notice("当前板型不支持语音");
+  printf("[FocusMate] voice capture not supported on this board\n");
+}
+
+static void voice_capture_finish(void)
+{
+}
+#endif
 
 static void cmd_goal(const char *text, int minutes)
 {
@@ -363,6 +393,7 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     break;
 
   case FM_UI_CMD_QUICKSTART:
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
     /* Hardware-key fallback: the first press starts recording, the next
      * press finishes it and sends the recognized text to the planner. */
     if (g_voice_active) {
@@ -370,6 +401,18 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     } else {
       voice_capture_start();
     }
+#else
+    {
+      char task_name[32];
+
+      if (g_session.stage_count > 0 &&
+          g_session.completed_task_count < g_session.stage_count) {
+        focus_storage_save_to_library(&g_session);
+      }
+      next_task_name(task_name, sizeof(task_name));
+      cmd_goal(task_name, 0);
+    }
+#endif
     break;
   case FM_UI_CMD_HOME:
     fm_state_handle_event(&g_session, FM_EVT_HOME);
@@ -573,11 +616,15 @@ int main(int argc, char *argv[])
     } else if (strcmp(cmd, "demo") == 0) {
       cmd_demo();
     } else if (strcmp(cmd, "ptt") == 0) {
+#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
       if (g_voice_active) {
         voice_capture_finish();
       } else {
         voice_capture_start();
       }
+#else
+      voice_capture_start();
+#endif
     } else if (strcmp(cmd, "goal") == 0) {
       char *text = strtok(NULL, " ");
       if (text) {
