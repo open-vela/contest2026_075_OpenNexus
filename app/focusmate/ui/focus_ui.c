@@ -164,6 +164,7 @@ static lv_obj_t *s_library_overlay;
 static lv_obj_t *s_library_empty_label;
 static lv_obj_t *s_library_btns[FOCUS_LIBRARY_MAX];
 static lv_obj_t *s_library_lbls[FOCUS_LIBRARY_MAX];
+static lv_obj_t *s_library_delete_btn;
 static int s_library_selection;
 static int s_library_active;
 
@@ -324,6 +325,20 @@ static void library_cb(lv_event_t *e)
           s_library_btns[i],
           lv_color_hex(i == idx ? 0x2070d0 : 0x2a3138), 0);
     }
+
+  if (s_library_delete_btn != NULL)
+    {
+      lv_obj_clear_flag(s_library_delete_btn, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+static void library_delete_cb(lv_event_t *e)
+{
+  (void)e;
+
+  pthread_mutex_lock(&s_cmd_lock);
+  s_pending_cmd = FM_UI_CMD_LIBRARY_DELETE;
+  pthread_mutex_unlock(&s_cmd_lock);
 }
 
 /* Show/hide a button, retitle it and re-point it at a command.  Must be
@@ -659,7 +674,7 @@ static void ui_build(void)
 
   /* Unfinished-task library selector. */
   s_library_overlay = lv_obj_create(scr);
-  lv_obj_set_size(s_library_overlay, 360, 250);
+  lv_obj_set_size(s_library_overlay, 360, 310);
   lv_obj_center(s_library_overlay);
   lv_obj_set_style_bg_color(s_library_overlay, lv_color_hex(0x1b222b), 0);
   lv_obj_set_style_radius(s_library_overlay, 16, 0);
@@ -698,6 +713,21 @@ static void ui_build(void)
       s_library_btns[i] = btn;
       s_library_lbls[i] = lbl;
     }
+
+  s_library_delete_btn = lv_button_create(s_library_overlay);
+  lv_obj_set_size(s_library_delete_btn, 140, 36);
+  lv_obj_align(s_library_delete_btn, LV_ALIGN_TOP_MID, 0, 258);
+  lv_obj_set_style_bg_color(s_library_delete_btn, lv_color_hex(0xd02020), 0);
+  lv_obj_set_style_radius(s_library_delete_btn, 10, 0);
+  lv_obj_add_event_cb(s_library_delete_btn, library_delete_cb,
+                      LV_EVENT_CLICKED, NULL);
+  lv_obj_add_flag(s_library_delete_btn, LV_OBJ_FLAG_HIDDEN);
+
+  lv_obj_t *delete_lbl = lv_label_create(s_library_delete_btn);
+  lv_obj_set_style_text_font(delete_lbl, FONT_CJK, 0);
+  lv_obj_set_style_text_color(delete_lbl, lv_color_hex(0xffffff), 0);
+  lv_label_set_text(delete_lbl, "删除");
+  lv_obj_center(delete_lbl);
 }
 
 /* The big countdown, shown only while a session is running.  Must be called
@@ -862,10 +892,25 @@ static void library_apply(const fm_session_t *sess)
         {
           lv_obj_add_flag(s_library_btns[i], LV_OBJ_FLAG_HIDDEN);
         }
+      if (s_library_delete_btn != NULL)
+        {
+          lv_obj_add_flag(s_library_delete_btn, LV_OBJ_FLAG_HIDDEN);
+        }
       return;
     }
 
   lv_obj_add_flag(s_library_empty_label, LV_OBJ_FLAG_HIDDEN);
+  if (s_library_delete_btn != NULL)
+    {
+      if (s_library_selection >= 0 && s_library_selection < count)
+        {
+          lv_obj_clear_flag(s_library_delete_btn, LV_OBJ_FLAG_HIDDEN);
+        }
+      else
+        {
+          lv_obj_add_flag(s_library_delete_btn, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
   for (i = 0; i < FOCUS_LIBRARY_MAX; i++)
     {
       char title[FM_MAX_GOAL_LEN];

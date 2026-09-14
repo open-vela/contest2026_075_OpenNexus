@@ -40,6 +40,9 @@ int focus_storage_load_library(int index, fm_session_t *sess);
 /* Copy the goal of unfinished task index into out. */
 int focus_storage_library_title(int index, char *out, int out_size);
 
+/* Delete unfinished task by index (newest entries last). */
+int focus_storage_delete_library(int index);
+
 /* Remove the saved session. */
 int focus_storage_clear(void);
 

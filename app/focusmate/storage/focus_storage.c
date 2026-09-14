@@ -596,6 +596,39 @@ int focus_storage_load_library(int index, fm_session_t *sess)
   return -1;
 }
 
+int focus_storage_delete_library(int index)
+{
+  cJSON *root = NULL;
+  cJSON *tasks = library_tasks(&root);
+  cJSON *entry;
+  int seen = 0;
+  int i;
+  int rc;
+
+  if (!tasks || index < 0) {
+    if (root) {
+      cJSON_Delete(root);
+    }
+    return -1;
+  }
+
+  for (i = 0; i < cJSON_GetArraySize(tasks); i++) {
+    entry = cJSON_GetArrayItem(tasks, i);
+    if (!library_entry_unfinished(entry)) {
+      continue;
+    }
+    if (seen++ == index) {
+      cJSON_DeleteItemFromArray(tasks, i);
+      rc = json_file_write(FOCUS_LIBRARY_FILE, root);
+      cJSON_Delete(root);
+      return rc;
+    }
+  }
+
+  cJSON_Delete(root);
+  return -1;
+}
+
 int focus_storage_library_title(int index, char *out, int out_size)
 {
   cJSON *root = NULL;

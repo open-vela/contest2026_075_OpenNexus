@@ -161,6 +161,8 @@ static const char *ui_cmd_name(fm_ui_cmd_t c)
     return "LIBRARY";
   case FM_UI_CMD_LIBRARY_ENTER:
     return "LIBRARY_ENTER";
+  case FM_UI_CMD_LIBRARY_DELETE:
+    return "LIBRARY_DELETE";
   case FM_UI_CMD_LIBRARY_BACK:
     return "LIBRARY_BACK";
   case FM_UI_CMD_HOME:
@@ -210,6 +212,7 @@ static void print_usage(void)
     "  review_done             task completed this round\n"
     "  round_abandon           abandon current round without recording\n"
     "  library                 open latest unfinished task library item\n"
+      "  library_delete <index>  delete unfinished task (0-based)\n"
     "  end_task                request full-task exit\n"
     "  exit_yes / exit_no      confirm or cancel full-task exit\n"
     "  settle                  request early settlement (-> SETTLE_CONFIRM)\n"
@@ -382,6 +385,18 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
     } else {
       focus_ui_notice("请先选择一个待完成任务");
     }
+    break;
+  }
+  case FM_UI_CMD_LIBRARY_DELETE: {
+    int selected = focus_ui_take_library_selection();
+
+    if (selected >= 0 && focus_storage_delete_library(selected) == 0) {
+      printf("[FocusMate] library task %d deleted\n", selected);
+      focus_ui_notice("任务已删除");
+    } else {
+      focus_ui_notice("删除失败");
+    }
+    focus_ui_refresh(&g_session);
     break;
   }
   case FM_UI_CMD_LIBRARY_BACK:
@@ -623,6 +638,15 @@ int main(int argc, char *argv[])
           fm_state_handle_event(&g_session, FM_EVT_RESTORE);
         } else {
           printf("[FocusMate] library_load <index>\n");
+        }
+      } else if (strcmp(cmd, "library_delete") == 0) {
+        char *nstr = strtok(NULL, " ");
+        int n = nstr ? atoi(nstr) : -1;
+        if (n >= 0 && focus_storage_delete_library(n) == 0) {
+          printf("[FocusMate] library task %d deleted\n", n);
+          focus_ui_refresh(&g_session);
+        } else {
+          printf("[FocusMate] library_delete <index>\n");
         }
       } else if (strcmp(cmd, "end_task") == 0 ||
                  strcmp(cmd, "exit_task") == 0) {
