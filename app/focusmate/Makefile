@@ -6,7 +6,7 @@ include $(APPDIR)/Make.defs
 
 PROGNAME  = focusmate
 PRIORITY  = 100
-STACKSIZE = 8192
+STACKSIZE = 40960
 MODULE    = $(CONFIG_LVX_USE_DEMO_FOCUSMATE)
 
 # Keep the Make build's include set aligned with CMakeLists.txt.

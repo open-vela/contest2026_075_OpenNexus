@@ -77,6 +77,8 @@ typedef enum
    * this the key would go dead after a long press, which is exactly what the
    * first hardware test showed. */
   FM_UI_CMD_QUICKSTART,
+  FM_UI_CMD_VOICE_START,
+  FM_UI_CMD_VOICE_STOP,
   FM_UI_CMD_LIBRARY,
   FM_UI_CMD_LIBRARY_ENTER,
   FM_UI_CMD_LIBRARY_BACK,

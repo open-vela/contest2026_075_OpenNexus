@@ -38,7 +38,7 @@ if(CONFIG_LVX_USE_DEMO_FOCUSMATE)
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${NUTTX_APPS_DIR}/netutils/cjson/cJSON
       ${NUTTX_APPS_DIR}/packages/ai_agent/include
-    STACKSIZE 16384
+    STACKSIZE 40960
     PRIORITY 100
   )
 endif()

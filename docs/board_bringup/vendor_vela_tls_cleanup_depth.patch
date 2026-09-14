@@ -1,0 +1,13 @@
+diff --git a/boards/vela/configs/goldfish-arm64-v8a-ap/defconfig b/boards/vela/configs/goldfish-arm64-v8a-ap/defconfig
+--- a/boards/vela/configs/goldfish-arm64-v8a-ap/defconfig
++++ b/boards/vela/configs/goldfish-arm64-v8a-ap/defconfig
+@@ -318,8 +318,8 @@
+ CONFIG_TESTING_GETPRIME=y
+ CONFIG_TESTING_OSTEST=y
+ CONFIG_TIMER_FD=y
+-CONFIG_TLS_NCLEANUP=2
++CONFIG_TLS_NCLEANUP=8
+ CONFIG_TLS_NELEM=16
+ CONFIG_TLS_TASK_NELEM=32
+ CONFIG_TTY_LAUNCH=y
+ CONFIG_TTY_SIGINT=y

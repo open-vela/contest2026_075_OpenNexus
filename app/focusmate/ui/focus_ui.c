@@ -247,9 +247,34 @@ static void *ui_thread(void *arg)
 static void btn_event_cb(lv_event_t *e)
 {
   lv_obj_t *btn = lv_event_get_target(e);
+  lv_event_code_t code = lv_event_get_code(e);
   fm_ui_cmd_t cmd = (fm_ui_cmd_t)(intptr_t)lv_obj_get_user_data(btn);
 
   if (cmd == FM_UI_CMD_NONE)
+    {
+      return;
+    }
+
+  /* The home button is push-to-talk.  Convert its press lifecycle into
+   * explicit start/stop commands; the click that follows RELEASED must not
+   * create a synthetic task. */
+  if (cmd == FM_UI_CMD_QUICKSTART)
+    {
+      if (code == LV_EVENT_PRESSED)
+        {
+          cmd = FM_UI_CMD_VOICE_START;
+        }
+      else if (code == LV_EVENT_RELEASED ||
+               code == LV_EVENT_PRESS_LOST)
+        {
+          cmd = FM_UI_CMD_VOICE_STOP;
+        }
+      else
+        {
+          return;
+        }
+    }
+  else if (code != LV_EVENT_CLICKED)
     {
       return;
     }
@@ -338,6 +363,9 @@ static lv_obj_t *btn_make(lv_obj_t *parent,
   lv_obj_set_style_radius(btn, 14, 0);
   lv_obj_set_style_bg_color(btn, lv_color_hex(0x2a3138), 0);
   lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL);
+  lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_PRESSED, NULL);
+  lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_RELEASED, NULL);
+  lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_PRESS_LOST, NULL);
 
   lbl = lv_label_create(btn);
   lv_obj_set_style_text_font(lbl, FONT_CJK, 0);
