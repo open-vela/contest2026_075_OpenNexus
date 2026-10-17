@@ -1,0 +1,14 @@
+[pixel] page=standby tasks=3 remaining=1500 phone=0/0 round=0
+[pixel] page=welcome tasks=3 remaining=1500 phone=0/0 round=0
+[pixel] page=list tasks=3 remaining=1500 phone=0/0 round=0
+[pixel] page=prepare tasks=3 remaining=1500 phone=0/0 round=0
+[pixel] page=wait-phone tasks=3 remaining=1500 phone=0/0 round=0
+[pixel] page=running tasks=3 remaining=1500 phone=0/0 round=1
+[pixel] page=running tasks=3 remaining=1200 phone=0/0 round=1
+[pixel] page=standby tasks=3 remaining=1200 phone=0/0 round=1
+[pixel] page=standby tasks=3 remaining=1200 phone=0/0 round=1
+[pixel-status] page=standby tasks=3 selected=0 remaining=1200 seconds=300 total=300 phone=0/0 pause=manual voice=mock
+[pixel] page=welcome tasks=3 remaining=1200 phone=0/0 round=1
+[pixel] page=paused tasks=3 remaining=1200 phone=0/0 round=1
+[pixel-status] page=paused tasks=3 selected=0 remaining=1200 seconds=300 total=300 phone=0/0 pause=manual voice=mock
+[pixel] page=standby tasks=3 remaining=1200 phone=0/0 round=1

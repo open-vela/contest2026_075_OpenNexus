@@ -40,4 +40,12 @@ config FOCUSMATE_ENABLE_UI
 	default y
 	depends on LV_USE_NUTTX
 
+config FOCUSMATE_HOME_MASK
+        hex "Verified Home button bit mask (0 disables)"
+        default 0
+
+config FOCUSMATE_TALK_MASK
+        hex "Verified Talk button bit mask (0 disables)"
+        default 0
+
 endif

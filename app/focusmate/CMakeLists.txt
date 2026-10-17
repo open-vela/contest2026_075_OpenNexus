@@ -29,6 +29,8 @@ if(CONFIG_LVX_USE_DEMO_FOCUSMATE)
       focusmate_main.c
       core/focus_state.c
       core/focus_timer.c
+      core/focus_flow.c
+      ui/focus_pixel.c
       agent/focus_agent.c
       sensor/phone_sensor.c
       storage/focus_storage.c

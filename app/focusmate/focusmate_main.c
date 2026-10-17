@@ -25,6 +25,7 @@
 #include "sensor/phone_sensor.h"
 #include "storage/focus_storage.h"
 #include "ui/focus_ui.h"
+#include "ui/focus_pixel.h"
 #ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
 #include "voice/voice_channel.h"
 #endif
@@ -494,6 +495,9 @@ static void apply_ui_command(fm_ui_cmd_t ucmd)
 
 int main(int argc, char *argv[])
 {
+  if (argc < 2 || strcmp(argv[1], "--legacy") != 0) {
+    return focus_pixel_main(argc, argv);
+  }
   int no_cli = 0;
   int i;
 

@@ -1,5 +1,14 @@
 # FocusMate — AI 桌面专注伙伴
 
+## Local pixel migration (2026-10-17)
+
+The current development branch defaults to the new native LVGL pixel UI. Run `focusmate`; the old implementation remains available as `focusmate --legacy` (restart the emulator when switching implementations).
+
+Start the simulator using `./tools/run_focusmate_pixel.sh` from the project repository, then type `focusmate` at NSH. The device canvas is 390x450; controls on the right are simulator-only.
+
+See [migration and rollback notes](docs/migration/pixel-ui-prehardware.md) and [verification evidence](docs/evidence/pixel-migration-2026-10-17.md). Hardware, true voice/LLM and Bluetooth networking remain separate validation steps. The Demo v2 description below documents the legacy flow.
+
+
 > 2026 首届 openvela AI 硬件开发者大赛
 > 赛道：AI 硬件产品创新
 > 队伍：contest2026_075_OpenNexus

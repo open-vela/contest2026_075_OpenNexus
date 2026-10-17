@@ -15,6 +15,7 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/ai_agent/include
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/packages/ai_agent/src
 
 CSRCS += core/focus_state.c core/focus_timer.c
+CSRCS += core/focus_flow.c ui/focus_pixel.c
 CSRCS += agent/focus_agent.c
 CSRCS += sensor/phone_sensor.c
 CSRCS += storage/focus_storage.c
