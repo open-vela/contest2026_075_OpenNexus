@@ -6,6 +6,8 @@ The current development branch defaults to the new native LVGL pixel UI. Run `fo
 
 Start the simulator using `./tools/run_focusmate_pixel.sh` from the project repository, then type `focusmate` at NSH. The device canvas is 390x450; controls on the right are simulator-only.
 
+Product overview (Chinese): [产品说明与未完成事项](docs/PRODUCT_OVERVIEW_zh-cn.md).
+
 See [migration and rollback notes](docs/migration/pixel-ui-prehardware.md) and [verification evidence](docs/evidence/pixel-migration-2026-10-17.md). Hardware, true voice/LLM and Bluetooth networking remain separate validation steps. The Demo v2 description below documents the legacy flow.
 
 
