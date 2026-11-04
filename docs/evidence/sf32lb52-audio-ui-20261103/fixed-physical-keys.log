@@ -1,0 +1,5 @@
+focusmate_ctl add
+nsh> [K[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+[pixel-key] pressed=0x2 home=0x1 talk=0x2
+[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0

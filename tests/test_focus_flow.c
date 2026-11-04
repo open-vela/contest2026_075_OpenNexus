@@ -8,4 +8,16 @@ int main(void){focus_flow f;ready(&f);flow_action(&f,"start");assert(f.page==P_W
 ready(&f);flow_action(&f,"start");flow_action(&f,"bypass");flow_phone(&f,false);flow_poll(&f,650);assert(f.page==P_RUNNING);flow_tick(&f,1000);assert(f.page==P_REVIEW&&f.total_seconds==900);flow_action(&f,"continue");assert(f.page==P_PREPARE&&!f.bypass);
 flow_init(&f);flow_action(&f,"add");flow_action(&f,"talk");flow_tick(&f,1000);assert(f.page==P_RECORD);flow_action(&f,"talk");assert(f.page==P_ADD&&f.count==0);add(&f);add(&f);assert(f.count==2&&f.tasks[0].id!=f.tasks[1].id);
 ready(&f);flow_action(&f,"start");flow_phone(&f,true);flow_poll(&f,300);flow_phone(&f,false);flow_poll(&f,650);assert(f.page==P_WAIT);flow_phone(&f,true);flow_poll(&f,650);assert(f.page==P_RUNNING);
+/* Repeated hardware samples must not restart initial debounce forever. */
+ready(&f);flow_action(&f,"start");
+for(int i=0;i<12;i++){flow_phone(&f,true);flow_poll(&f,50);assert(!f.phone_known);}
+flow_phone(&f,true);flow_poll(&f,50);assert(f.phone_known&&f.page==P_RUNNING);
+/* A failed sensor pauses safely and must not auto-resume when it recovers. */
+flow_tick(&f,5);int remaining=f.remaining;
+flow_phone_unavailable(&f);assert(f.page==P_PAUSED&&!f.phone_known&&!f.phone_pause);
+flow_tick(&f,5);assert(f.remaining==remaining);
+for(int i=0;i<13;i++){flow_phone(&f,true);flow_poll(&f,50);}
+assert(f.phone_known&&f.page==P_PAUSED&&!f.phone_pause);
+flow_action(&f,"resume");assert(f.page==P_RUNNING);
+flow_action(&f,"home");flow_phone(&f,false);flow_poll(&f,650);flow_phone(&f,true);flow_poll(&f,650);assert(f.page==P_STANDBY);
 puts("PASS: intake, manual endpoint, dock gate, debounce, pause ownership, Home, review, bypass, repeat rounds");return 0;}

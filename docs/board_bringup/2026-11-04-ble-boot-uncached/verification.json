@@ -1,0 +1,16 @@
+{
+  "firmware_sha256": "9ac29af15b1b85fd27b86871f0f1a6ff38b35150ca8e01abd1aabdb97ebe2bff",
+  "flash_verified": true,
+  "ccr_hex": "00020201",
+  "dcache_enabled": false,
+  "icache_enabled": true,
+  "windows_ping_passed": true,
+  "actual_pong_count": 16,
+  "reminder_with_ble_fired": true,
+  "heap_passed": true,
+  "ready_for_iphone": true,
+  "iphone_pong_verified": true,
+  "phone_https_verified": false,
+  "github_pushed": false,
+  "iphone_evidence": "User confirmed pong; board rx=17 tx=17 injected=0 error=0; heap passed; advertising resumed after observed disconnect"
+}

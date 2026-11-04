@@ -40,7 +40,57 @@ if(CONFIG_LVX_USE_DEMO_FOCUSMATE)
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${NUTTX_APPS_DIR}/netutils/cjson/cJSON
       ${NUTTX_APPS_DIR}/packages/ai_agent/include
+      ${NUTTX_APPS_DIR}/packages/ai_agent/src
     STACKSIZE 40960
     PRIORITY 100
   )
+endif()
+
+# Diagnostic profile; does not assert full CONFIG_EXAMPLES_AI_AGENT_VELA support.
+if(FOCUSMATE_SERIAL_AGENT)
+  add_subdirectory(serial_agent)
+endif()
+
+if(FOCUSMATE_PHONE_GPIO OR CONFIG_FOCUSMATE_PHONE_GPIO)
+  if(NOT CONFIG_ARCH_CHIP_SF32LB52)
+    message(FATAL_ERROR "FocusMate PA41 phone GPIO is SF32LB52-specific")
+  endif()
+  target_sources(apps_focusmate PRIVATE sensor/phone_gpio.c)
+  target_compile_definitions(apps_focusmate PRIVATE CONFIG_FOCUSMATE_PHONE_GPIO=1)
+endif()
+
+if(FOCUSMATE_BOARD_AUDIO)
+  if(NOT CONFIG_AUDIO OR NOT CONFIG_ARCH_CHIP_SF32LB52)
+    message(FATAL_ERROR "FocusMate board audio requires SF32LB52 and CONFIG_AUDIO=y")
+  endif()
+  target_sources(apps_focusmate PRIVATE audio/focus_audio.c)
+  target_compile_definitions(apps_focusmate PRIVATE CONFIG_FOCUSMATE_BOARD_AUDIO=1)
+  nuttx_add_application(NAME audio_probe STACKSIZE 8192 PRIORITY 100
+    SRCS diagnostics/audio_probe.c INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/audio)
+  nuttx_add_application(NAME focusmate_ctl STACKSIZE 4096 PRIORITY 100
+    SRCS diagnostics/focusmate_ctl.c)
+endif()
+
+# Optional real-board BLE diagnostic/relay, independent of UI mock networking.
+if(FOCUSMATE_BLE_RELAY)
+  if(NOT CONFIG_UART_BTH4 OR NOT CONFIG_BT_ORIGINAL_API OR NOT CONFIG_ARCH_CHIP_SF32LB52)
+    message(FATAL_ERROR "FocusMate BLE requires SF32LB52 UART_BTH4 and the original Zblue API")
+  endif()
+  nuttx_add_application(NAME focusmate_ble STACKSIZE 16384 PRIORITY 100
+    SRCS network/focus_ble.c network/ble_frame.c network/hci_trace.c diagnostics/ble_hci_probe.c
+    INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/network)
+  target_sources(apps_focusmate_ble PRIVATE network/h4_nuttx.c)
+  target_link_libraries(apps_focusmate_ble PRIVATE zblue_headers)
+endif()
+
+# Step-1 isolated instance of the genuine ai_agent cron scheduler. No LLM.
+if(FOCUSMATE_REMINDER)
+  set(FM_AGENT ${NUTTX_APPS_DIR}/packages/ai_agent)
+  nuttx_add_application(NAME focusmate_remind STACKSIZE 32768 PRIORITY 100
+    SRCS reminder/reminder.c reminder/cron_instance.c
+    INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/reminder
+      ${FM_AGENT}/include ${FM_AGENT}/src
+      ${NUTTX_APPS_DIR}/netutils/cjson/cJSON)
+  target_sources(apps_focusmate PRIVATE reminder/prompt_state.c)
+  target_compile_definitions(apps_focusmate PRIVATE CONFIG_FOCUSMATE_REMINDER=1)
 endif()

@@ -1,0 +1,6 @@
+focusmate_ctl status
+nsh> [K[reminder-ui] pending=0 visible=0 title=
+[pixel-status] page=prepare tasks=4 selected=3 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_remind list
+[reminder] jobs=0 now=2085895015
+nsh> [K

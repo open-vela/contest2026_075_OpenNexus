@@ -1,0 +1,164 @@
+[1/19] cd $OPENVELA_ROOT/cmake_out/sf32lb52_devkit_lcd/libs/libc/misc && /usr/bin/cmake -E touch $OPENVELA_ROOT/nuttx/libs/libc/misc/lib_utsname.c
+[2/19] cd $OPENVELA_ROOT/nuttx && /usr/bin/cmake -DKCONFIG_CONFIG=$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig -DNUTTX_DIR=$OPENVELA_ROOT/nuttx -DCMAKE_BINARY_DIR=$OPENVELA_ROOT/cmake_out/sf32lb52_devkit_lcd -P $OPENVELA_ROOT/nuttx/cmake/nuttx_generate_dts.cmake
+[3/19] Generating bin output directories
+[4/19] Building C object libs/libc/CMakeFiles/c.dir/misc/lib_utsname.c.o
+[5/19] Building C object boards/exclude_board/src/CMakeFiles/apps_mic_test.dir$OPENVELA_ROOT/contest2026_075_OpenNexus/app/focusmate/diagnostics/mic_test.c.o
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_rcc.h:15,
+                 from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:214,
+                 from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal.h:22,
+                 from $OPENVELA_ROOT/contest2026_075_OpenNexus/app/focusmate/diagnostics/mic_test.c:18:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_def.h:57: warning: "UNUSED" redefined
+   57 | #define UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+      |
+In file included from $OPENVELA_ROOT/nuttx/include/stdint.h:35,
+                 from $OPENVELA_ROOT/nuttx/include/nuttx/cache.h:34,
+                 from $OPENVELA_ROOT/contest2026_075_OpenNexus/app/focusmate/diagnostics/mic_test.c:8:
+$OPENVELA_ROOT/nuttx/include/nuttx/compiler.h:624: note: this is the location of the previous definition
+  624 | #    define UNUSED(a) ((void)(1 || &(a)))
+      |
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:271:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_mpi_ex.h:524:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  524 | int HAL_QSPI_ENABLE_WDT();
+      | ^~~
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:275:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_i2c.h:152:6: warning: "USE_HAL_I2C_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  152 | #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_i2c.h:208:6: warning: "USE_HAL_I2C_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  208 | #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_i2c.h:227:6: warning: "USE_HAL_I2C_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  227 | #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_i2c.h:444:6: warning: "USE_HAL_I2C_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  444 | #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_i2c.h:598:6: warning: "USE_HAL_I2C_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  598 | #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:319:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_uart.h:245:6: warning: "USE_HAL_UART_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  245 | #if (USE_HAL_UART_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_uart.h:266:6: warning: "USE_HAL_UART_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  266 | #if (USE_HAL_UART_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_uart.h:316:6: warning: "USE_HAL_UART_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  316 | #if (USE_HAL_UART_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_uart.h:808:6: warning: "USE_HAL_UART_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  808 | #if (USE_HAL_UART_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_uart.h:1681:6: warning: "USE_HAL_UART_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+ 1681 | #if (USE_HAL_UART_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:371:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_sys_cfg.h:167:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  167 | char *BSP_Get_UserOTP_Cache();
+      | ^~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_sys_cfg.h:168:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  168 | char *BSP_Get_CustOTP_Cache();
+      | ^~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_sys_cfg.h:170:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  170 | char *BSP_Get_SysCfg_Cache();
+      | ^~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_sys_cfg.h:175:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  175 | uint32_t BSP_Get_Sip1_Mode();
+      | ^~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_sys_cfg.h:176:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  176 | uint32_t BSP_Get_Sip2_Mode();
+      | ^~~~~~~~
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:375:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_pmu.h:510:35: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  510 | __STATIC_INLINE HAL_StatusTypeDef HAL_PMU_EnableChgWakeup()
+      |                                   ^~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_pmu.h:518:35: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  518 | __STATIC_INLINE HAL_StatusTypeDef HAL_PMU_DisableChgWakeup()
+      |                                   ^~~~~~~~~~~~~~~~~~~~~~~~
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:387:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_rng.h:74:6: warning: "USE_HAL_RNG_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+   74 | #if (USE_HAL_RNG_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_rng.h:84:6: warning: "USE_HAL_RNG_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+   84 | #if (USE_HAL_RNG_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_rng.h:154:6: warning: "USE_HAL_RNG_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  154 | #if (USE_HAL_RNG_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_rng.h:174:6: warning: "USE_HAL_RNG_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  174 | #if (USE_HAL_RNG_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_rng.h:320:6: warning: "USE_HAL_RNG_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  320 | #if (USE_HAL_RNG_REGISTER_CALLBACKS == 1)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:423:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_lrc_cal.h:64:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+   64 | float HAL_LPTIM_GetFreq();
+      | ^~~~~
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:444:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_hcd.h:227:6: warning: "USE_HAL_HCD_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  227 | #if (USE_HAL_HCD_REGISTER_CALLBACKS == 1U)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_hcd.h:242:6: warning: "USE_HAL_HCD_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  242 | #if (USE_HAL_HCD_REGISTER_CALLBACKS == 1U)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_hcd.h:296:6: warning: "USE_HAL_HCD_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  296 | #if (USE_HAL_HCD_REGISTER_CALLBACKS == 1U)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_hcd.h:344:6: warning: "USE_HAL_HCD_REGISTER_CALLBACKS" is not defined, evaluates to 0 [-Wundef]
+  344 | #if (USE_HAL_HCD_REGISTER_CALLBACKS == 1U)
+      |      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from $OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_conf_hcpu.h:448:
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_audcodec.h:367:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  367 | void HAL_TURN_OFF_PLL();
+      | ^~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_audcodec.h:538:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  538 | uint8_t get_pll_state();
+      | ^~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_audcodec.h:540:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  540 | uint8_t get_pll_freq_type();
+      | ^~~~~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_audcodec.h:543:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  543 | void bf0_disable_pll();
+      | ^~~~
+$OPENVELA_ROOT/vendor/sifli/chips/sf32lb52/../drivers/Include/bf0_hal_audcodec.h:544:1: warning: function declaration isn't a prototype [-Wstrict-prototypes]
+  544 | void HAL_TURN_ON_PLL();
+      | ^~~~
+[6/19] Linking C static library boards/exclude_board/src/libapps_mic_test.a
+[7/19] Linking C static library libs/libc/libc.a
+[8/19] Linking CXX executable nuttx
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: nuttx has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+           flash:     2349236 B        16 MB     14.00%
+            sram:      188488 B       512 KB     35.95%
+           psram:           0 B         8 MB      0.00%
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: .note.gnu.build-id section discarded, --build-id ignored
+[9/19] Generating nuttx.bin
+[10/19] Generating allsyms_first.c
+[11/19] Building C object CMakeFiles/first_link.dir/allsyms_first.c.o
+[12/19] Linking CXX executable first_link
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: first_link has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+           flash:     2497500 B        16 MB     14.89%
+            sram:      241608 B       512 KB     46.08%
+           psram:           0 B         8 MB      0.00%
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: .note.gnu.build-id section discarded, --build-id ignored
+[13/19] Generating allsyms_second.c
+[14/19] Building C object CMakeFiles/second_link.dir/allsyms_second.c.o
+[15/19] Linking CXX executable second_link
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: second_link has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+           flash:     2497500 B        16 MB     14.89%
+            sram:      241608 B       512 KB     46.08%
+           psram:           0 B         8 MB      0.00%
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: .note.gnu.build-id section discarded, --build-id ignored
+[16/19] Generating allsyms_final.c
+[17/19] Building C object CMakeFiles/final_nuttx.dir/allsyms_final.c.o
+[18/19] Linking CXX executable final_nuttx
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: final_nuttx has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+           flash:     2497500 B        16 MB     14.89%
+            sram:      241608 B       512 KB     46.08%
+           psram:           0 B         8 MB      0.00%
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: .note.gnu.build-id section discarded, --build-id ignored
+[19/19] Generating System.map

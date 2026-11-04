@@ -1,0 +1,157 @@
+[PC elapsed=0.008s] focu[PC elapsed=0.088s] smate_remind after 60 "写报告"
+[0m[cron] Saved 1 cron jobs
+
+[0m[0m[cron] Added job: focusmate-once (00000000) kind=at next=2085894042 ch=system:cron
+
+[0m[reminder] SCHEDULED id=00000000 delay=60 due=2085894042 persisted=1 title=写报告
+nsh> [K[PC elapsed=0.119s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893982
+
+[0m[PC elapsed=1.112s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893983
+
+[0m[PC elapsed=2.123s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893984
+
+[0m[PC elapsed=3.134s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893985
+
+[0m[PC elapsed=4.131s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893986
+
+[0m[PC elapsed=5.142s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893987
+
+[0m[PC elapsed=6.154s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893988
+
+[0m[PC elapsed=7.165s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893989
+
+[0m[PC elapsed=8.174s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893990
+
+[0m[PC elapsed=9.183s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893991
+
+[0m[PC elapsed=10.037s] focusmate_ctl status
+[PC elapsed=10.053s] nsh> [Kfocusmate_remind list
+[PC elapsed=10.084s] [reminder-ui] pending=0 visible=0 title=
+[reminder] jobs=1 now=2085893992
+[reminder] id=00000000 enabled=1 due=2085894042 title=写报告
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+[PC elapsed=10.194s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893992
+
+[0m[PC elapsed=11.207s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893993
+
+[0m[PC elapsed=12.222s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893994
+
+[0m[PC elapsed=13.221s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893995
+
+[0m[PC elapsed=14.230s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893996
+
+[0m[PC elapsed=15.254s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893997
+
+[0m[PC elapsed=16.259s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893998
+
+[0m[PC elapsed=17.267s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085893999
+
+[0m[PC elapsed=18.282s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894000
+
+[0m[PC elapsed=19.282s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894001
+
+[0m[PC elapsed=20.294s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894002
+
+[0m[PC elapsed=21.306s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894003
+
+[0m[PC elapsed=22.314s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894004
+
+[0m[PC elapsed=23.325s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894005
+
+[0m[PC elapsed=24.344s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894006
+
+[0m[PC elapsed=25.353s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894007
+
+[0m[PC elapsed=26.363s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894008
+
+[0m[PC elapsed=27.370s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894009
+
+[0m[PC elapsed=28.380s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894010
+
+[0m[PC elapsed=29.389s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894011
+
+[0m[PC elapsed=30.404s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894012
+
+[0m[PC elapsed=31.414s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894013
+
+[0m[PC elapsed=32.425s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894014
+
+[0m[PC elapsed=33.429s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894015
+
+[0m[PC elapsed=34.434s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894016
+
+[0m[PC elapsed=35.451s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894017
+
+[0m[PC elapsed=36.459s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894018
+
+[0m[PC elapsed=37.464s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894019
+
+[0m[PC elapsed=38.484s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894020
+
+[0m[PC elapsed=39.510s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894021
+
+[0m[PC elapsed=40.499s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894022
+
+[0m[PC elapsed=41.507s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894023
+
+[0m[PC elapsed=42.523s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894024
+
+[0m[PC elapsed=43.526s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894025
+
+[0m[PC elapsed=44.540s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894026
+
+[0m[PC elapsed=45.547s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894027
+
+[0m[PC elapsed=46.552s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894028
+
+[0m[PC elapsed=47.574s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894029
+
+[0m[PC elapsed=48.583s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894030
+
+[0m[PC elapsed=49.584s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894031
+
+[0m[PC elapsed=50.594s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894032
+
+[0m[PC elapsed=51.603s] [0m[2m[cron] Check job[[PC elapsed=51.619s] 0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894033
+
+[0m[PC elapsed=52.617s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894034
+
+[0m[PC elapsed=53.631s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894035
+
+[0m[PC elapsed=54.644s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894036
+
+[0m[PC elapsed=55.016s] focusmate_ctl status
+[PC elapsed=55.031s] [reminder-ui] pending=0 visible=0 title=
+[PC elapsed=55.048s] nsh> [pixel-status] page=standby tasks=3 selected=-1 remaining=1500 s[Keconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_remind list
+[PC elapsed=55.063s] [reminder] jobs=1 now=2085894037
+[reminder] id=00000000 enabled=1 due=2085894042 title=写报告
+[PC elapsed=55.080s] nsh> [K[PC elapsed=55.652s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894038
+
+[0m[PC elapsed=56.662s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894039
+
+[0m[PC elapsed=57.662s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894040
+
+[0m[PC elapsed=58.676s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894041
+
+[0m[PC elapsed=59.709s] [0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894042 now=2085894042
+
+[0m[0m[cron] Cron job firing: focusmate-once (00000000)
+
+[0m[0m[cron] Executing action: focusmate_prompt args={"title":"写报告"}
+
+[0m[PC elapsed=59.740s] [reminder] FIRED epoch=2085894042 title=写报告 queue=delivered
+[0m[cron] Action focusmate_prompt OK: UI event queued
+
+[0m[0m[cron] Deleting one-shot: focusmate-once
+
+[0m[reminder-ui] received title=写报告
+[PC elapsed=59.831s] [reminder-ui] SHOWN title=写报告
+[PC elapsed=60.357s] [0m[cron] Saved 0 cron jobs
+
+[0m[PC elapsed=65.031s] focusmate_ctl status
+[PC elapsed=65.062s] nsh> [Kfocusmate_remind list
+[reminder-ui] pending=1 visible=1 title=写报告
+[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+[PC elapsed=65.077s] [reminder] jobs=0 now=2085894047
+[PC elapsed=65.094s] nsh> [K

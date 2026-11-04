@@ -48,4 +48,17 @@ config FOCUSMATE_TALK_MASK
         hex "Verified Talk button bit mask (0 disables)"
         default 0
 
+config FOCUSMATE_PHONE_GPIO
+        bool "Use PA41 active-low phone dock switch (SF32LB52 QSPI board)"
+        default n
+        depends on ARCH_CHIP_SF32LB52 && DEV_GPIO
+        help
+                Requires the board patch registering /dev/phone0 as input pull-up.
+                Header pin 5 is PA41; pin 6 is GND. Mock phone events are disabled.
+
+config FOCUSMATE_PHONE_DEVPATH
+        string "Phone presence GPIO device"
+        default "/dev/phone0"
+        depends on FOCUSMATE_PHONE_GPIO
+
 endif

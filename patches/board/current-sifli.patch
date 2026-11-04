@@ -1,0 +1,374 @@
+diff --git a/boards/sf32lb52/drivers/input/ft6146.c b/boards/sf32lb52/drivers/input/ft6146.c
+index 321f729..1a7ea3b 100644
+--- a/boards/sf32lb52/drivers/input/ft6146.c
++++ b/boards/sf32lb52/drivers/input/ft6146.c
+@@ -69,6 +69,14 @@ struct ft6146_touch_lowerhalf_s
+   uint32_t pin_irq;
+   uint16_t last_x;
+   uint16_t last_y;
++
++  /* Set by the IRQ handler when it cannot queue the worker because one is
++   * already running.  The worker re-arms itself so the final finger state is
++   * always read.  Without this a quick tap loses its TOUCH_UP event and LVGL
++   * keeps believing the finger is still down, which makes the on-screen
++   * buttons respond only intermittently.
++   */
++  volatile bool work_pending;
+ };
+ 
+ /****************************************************************************
+@@ -118,6 +126,10 @@ static void ft6146_data_worker(void *param)
+   uint8_t touch_num;
+   int ret;
+ 
++  /* Anything that happened before this point is covered by the sample we are
++   * about to take, so the flag can be cleared first. */
++  ft6146->work_pending = false;
++
+   ret = ft6146_i2c_read(ft6146->i2c, FT6146_REG_TD_STATUS, buf, sizeof(buf));
+   if (ret < 0)
+     {
+@@ -143,6 +155,18 @@ static void ft6146_data_worker(void *param)
+   sample.point[0].y = ft6146->last_y;
+ 
+   touch_event(ft6146->lower.priv, &sample);
++
++  /* Another edge may have arrived while we were reading the panel; run once
++   * more so that a press/release pair is never collapsed into a single
++   * sample. */
++  if (ft6146->work_pending)
++    {
++      ft6146->work_pending = false;
++      if (work_queue(HPWORK, &ft6146->work, ft6146_data_worker, ft6146, 0) < 0)
++        {
++          ft6146->work_pending = true;
++        }
++    }
+ }
+ 
+ static void ft6146_irq_handler(void *arg)
+@@ -151,8 +175,16 @@ static void ft6146_irq_handler(void *arg)
+     (struct ft6146_touch_lowerhalf_s *)arg;
+   int ret;
+ 
++  /* A worker may already be running, in which case work_queue() returns
++   * -EBUSY.  That must not drop the edge (and must not trip the assert that
++   * used to live here): remember it so the running worker re-reads the panel
++   * and picks up the release.
++   */
+   ret = work_queue(HPWORK, &ft6146->work, ft6146_data_worker, ft6146, 0);
+-  DEBUGASSERT(ret == OK);
++  if (ret < 0)
++    {
++      ft6146->work_pending = true;
++    }
+ }
+ 
+ static int ft6146_hw_init(struct ft6146_touch_lowerhalf_s *ft6146)
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig b/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
+index b560a94..5b228b5 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig
+@@ -91,7 +91,6 @@ CONFIG_EXAMPLES_BUTTONS_QTD=1
+ CONFIG_EXAMPLES_FB=y
+ CONFIG_EXAMPLES_GPIO=y
+ CONFIG_EXAMPLES_HELLO=y
+-CONFIG_EXAMPLES_LSM6DSL_READER=y
+ CONFIG_EXAMPLES_LVGLDEMO=y
+ CONFIG_EXAMPLES_PWM=y
+ CONFIG_EXAMPLES_TIMER=y
+@@ -105,6 +104,7 @@ CONFIG_FS_PROCFS=y
+ CONFIG_FS_ROMFS=y
+ CONFIG_FS_TMPFS=y
+ CONFIG_GRAPHICS_LVGL=y
++CONFIG_I2C=y
+ CONFIG_I2C_BITBANG=y
+ CONFIG_I2C_SLAVE=y
+ CONFIG_IDLETHREAD_STACKSIZE=16096
+@@ -150,7 +150,6 @@ CONFIG_SCHED_HPWORK=y
+ CONFIG_SCHED_LPWORK=y
+ CONFIG_SCHED_WAITPID=y
+ CONFIG_SENSORS=y
+-CONFIG_SENSORS_LSM6DSL=y
+ CONFIG_SF32LB52_USBDEV=y
+ CONFIG_SIFLI_LCD=y
+ CONFIG_SIG_EVTHREAD=y
+@@ -170,10 +169,22 @@ CONFIG_TIMER_ARCH=y
+ CONFIG_TLS_NCLEANUP=4
+ CONFIG_TLS_NELEM=4
+ CONFIG_TLS_TASK_NELEM=4
+-CONFIG_TOUCH_IRQ_PIN=41
++CONFIG_TOUCH_IRQ_PIN=31
+ CONFIG_UART_BAUD=1000000
+ CONFIG_UART_BUFSZ=1024
+ CONFIG_UART_SERIAL_CONSOLE=y
+ CONFIG_UNQLITE=y
+ CONFIG_VIDEO_FB=y
+ CONFIG_WATCHDOG=y
++
++# FocusMate + ai_agent (added for board bring-up)
++CONFIG_LVX_USE_DEMO_FOCUSMATE=y
++CONFIG_FOCUSMATE_DATA_DIR="/data/focusmate"
++CONFIG_NETUTILS_CJSON=y
++CONFIG_LV_FONT_MONTSERRAT_20=y
++CONFIG_LV_FONT_MONTSERRAT_32=y
++CONFIG_LV_FONT_MONTSERRAT_40=y
++CONFIG_LV_FONT_SIMSUN_16_CJK=y
++
++CONFIG_FOCUSMATE_HOME_MASK=0x1
++CONFIG_FOCUSMATE_TALK_MASK=0x0
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/include/board.h b/boards/sf32lb52/sf32lb52_devkit_lcd/include/board.h
+index aa9cffc..dae8c3a 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/include/board.h
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/include/board.h
+@@ -31,7 +31,13 @@
+  */
+ 
+ #define BUTTON_KEY2      0
++#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
++#define BUTTON_KEY1      1
++#define BUTTON_KEY1_BIT  (1 << BUTTON_KEY1)
++#define NUM_BUTTONS      2
++#else
+ #define NUM_BUTTONS      1
++#endif
+ 
+ #define BUTTON_KEY2_BIT  (1 << BUTTON_KEY2)
+ 
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/scripts/ld.script b/boards/sf32lb52/sf32lb52_devkit_lcd/scripts/ld.script
+index c84ce2c..76d3a0f 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/scripts/ld.script
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/scripts/ld.script
+@@ -21,7 +21,9 @@
+ MEMORY
+ {
+   flash (rx) : ORIGIN = 0x12010000, LENGTH = 16M
+-  sram (rwx) : ORIGIN = 0x20000000, LENGTH = 512K
++  /* SDK ROM configuration and mailbox: 0x2007FB00..0x2007FFFF.
++   * Match HCPU_RAM_DATA_END_ADDR in sf32lb52x/mem_map.h. */
++  sram (rwx) : ORIGIN = 0x20000000, LENGTH = 0x7FB00
+   psram (rwx) : ORIGIN = 0x60000000, LENGTH = 8M
+ }
+ 
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt b/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
+index 9074a55..d94b2dc 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
+@@ -65,3 +65,30 @@ if(CONFIG_CRYPTO)
+     SRCS
+     md5_test.c)
+ endif()
++
++# FocusMate standalone board speaker diagnostic (not an audio driver).
++nuttx_add_application(NAME speaker_test STACKSIZE 4096 PRIORITY 100
++  SRCS ${NUTTX_APPS_DIR}/../contest2026_075_OpenNexus/app/focusmate/diagnostics/speaker_test.c)
++get_target_property(FM_BOARD_INCLUDES board INCLUDE_DIRECTORIES)
++target_include_directories(apps_speaker_test PRIVATE ${FM_BOARD_INCLUDES})
++target_compile_definitions(apps_speaker_test PRIVATE SOC_BF0_HCPU SF32LB52X USE_HAL_DRIVER HAL_TICK_PER_SECOND=1000)
++
++# FocusMate PA41 phone dock input, kept separate from the stock gpio0..gpio2.
++if(FOCUSMATE_PHONE_GPIO OR CONFIG_FOCUSMATE_PHONE_GPIO)
++  target_sources(board PRIVATE ${NUTTX_APPS_DIR}/../contest2026_075_OpenNexus/app/focusmate/sensor/sf32lb52_phone_gpio.c)
++  target_compile_definitions(board PRIVATE CONFIG_FOCUSMATE_PHONE_GPIO=1)
++endif()
++
++# FocusMate finite onboard microphone capture/playback diagnostic.
++if(FOCUSMATE_MIC_TEST)
++  nuttx_add_application(NAME mic_test STACKSIZE 8192 PRIORITY 100
++    SRCS ${NUTTX_APPS_DIR}/../contest2026_075_OpenNexus/app/focusmate/diagnostics/mic_test.c)
++  target_include_directories(apps_mic_test PRIVATE ${FM_BOARD_INCLUDES})
++  target_compile_definitions(apps_mic_test PRIVATE SOC_BF0_HCPU SF32LB52X USE_HAL_DRIVER HAL_TICK_PER_SECOND=1000)
++endif()
++
++# FocusMate PCM lower halves and read-only sampling of the power key.
++if(FOCUSMATE_BOARD_AUDIO)
++  target_sources(board PRIVATE ${NUTTX_APPS_DIR}/../contest2026_075_OpenNexus/app/focusmate/audio/sf32lb52_audio.c)
++  target_compile_definitions(board PRIVATE CONFIG_FOCUSMATE_BOARD_AUDIO=1)
++endif()
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS b/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
+index e69de29..40814a6 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS
+@@ -0,0 +1,2 @@
++sleep 3
++focusmate -d &
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sf32lb52_buttons.c b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sf32lb52_buttons.c
+index 2c2954a..01936b2 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sf32lb52_buttons.c
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sf32lb52_buttons.c
+@@ -40,6 +40,7 @@
+  * Private Definitions
+  ****************************************************************************/
+ 
++#define SF32LB52_BUTTON_KEY1_PIN GET_PIN_2(hwp_gpio1, 34)
+ #define SF32LB52_BUTTON_KEY2_PIN      GET_PIN_2(hwp_gpio1, 11)
+ #define SF32LB52_BUTTON_KEY2_ACTIVE_LOW 0
+ #define SF32LB52_BUTTON_POLL_MS       10
+@@ -101,12 +102,17 @@ static struct sf32lb52_btnlower_s g_btnlower =
+ static btn_buttonset_t sf32lb52_button_readset(void)
+ {
+   bool level = sifli_gpio_read(SF32LB52_BUTTON_KEY2_PIN);
+-
++  btn_buttonset_t keys;
+ #if SF32LB52_BUTTON_KEY2_ACTIVE_LOW
+-  return level ? 0 : 1;
++  keys = level ? 0 : 1;
+ #else
+-  return level ? 1 : 0;
++  keys = level ? 1 : 0;
++#endif
++#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
++  /* Observe PA34 only. Preserve its default power/download pull-down. */
++  if (sifli_gpio_read(SF32LB52_BUTTON_KEY1_PIN)) keys |= 2;
+ #endif
++  return keys;
+ }
+ 
+ static void sf32lb52_button_interrupt(void *arg)
+@@ -165,7 +171,11 @@ static void sf32lb52_button_poll(wdparm_t arg)
+ static btn_buttonset_t sf32lb52_btn_supported(
+   FAR const struct btn_lowerhalf_s *lower)
+ {
++#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
++  return 3;
++#else
+   return 1;
++#endif
+ }
+ 
+ static btn_buttonset_t sf32lb52_btn_buttons(
+diff --git a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
+index 32be34b..6e3cd74 100644
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
+@@ -404,6 +404,24 @@ int sf32lb52_lchspi_ulp_bringup(void)
+     }
+ #endif
+ 
++#ifdef CONFIG_FOCUSMATE_PHONE_GPIO
++  {
++    extern int focus_phone_gpio_initialize(void);
++    int phone_ret = focus_phone_gpio_initialize();
++    if (phone_ret < 0)
++      syslog(LOG_ERR, "ERROR: phone GPIO initialization failed: %d\n", phone_ret);
++  }
++#endif
++
++#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
++  {
++    extern int focus_board_audio_initialize(void);
++    int audio_ret = focus_board_audio_initialize();
++    if (audio_ret < 0)
++      syslog(LOG_ERR, "ERROR: audio registration failed: %d\n", audio_ret);
++  }
++#endif
++
+ #ifdef CONFIG_TIMER
+ #if SF32LB_TIMER_DEFAULT_INDEX >= 0
+   {
+@@ -466,7 +484,7 @@ int sf32lb52_lchspi_ulp_bringup(void)
+   /* Initialize I2C bus 0 on the touch panel pins. */
+   struct i2c_master_s *i2c0 = NULL;
+ 
+-  HAL_PIN_Set(PAD_PA37, I2C1_SCL, PIN_PULLUP, 1);
++  HAL_PIN_Set(PAD_PA30, I2C1_SCL, PIN_PULLUP, 1);
+   HAL_PIN_Set(PAD_PA33, I2C1_SDA, PIN_PULLUP, 1);
+ 
+   i2c0 = sifli_i2cbus_initialize(0);
+diff --git a/chips/sf32lb52/Kconfig b/chips/sf32lb52/Kconfig
+index 11fa808..b91815e 100644
+--- a/chips/sf32lb52/Kconfig
++++ b/chips/sf32lb52/Kconfig
+@@ -27,13 +27,21 @@ config ARCH_CHIP_SF32LB52
+ 	select ARMV8M_HAVE_ICACHE
+ 	select ARMV8M_HAVE_DCACHE
+ 	select ARMV8M_ICACHE
+-	select ARMV8M_DCACHE
++	select ARMV8M_DCACHE if !SF32LB52_DCACHE_BOOT_DISABLED
+ 	select ARCH_ICACHE
+-	select ARCH_DCACHE
++	select ARCH_DCACHE if !SF32LB52_DCACHE_BOOT_DISABLED
+ 	select BF0_HCPU
+ 
+ endchoice
+ 
++config SF32LB52_DCACHE_BOOT_DISABLED
++        bool "Diagnostic: boot without D-cache (shared mailbox bring-up)"
++        default n
++        help
++                Keep instruction cache enabled, but do not enable data cache.
++                Diagnostic profile until shared CPU/DMA memory is coherent.
++                Lower performance is expected. No runtime cache transition.
++
+ menu "On-chip Peripheral RTOS Drivers"
+ 
+     menuconfig BSP_USING_GPIO
+diff --git a/chips/sf32lb52/sf32lb52_bth4.c b/chips/sf32lb52/sf32lb52_bth4.c
+index 49796cc..a2a393e 100644
+--- a/chips/sf32lb52/sf32lb52_bth4.c
++++ b/chips/sf32lb52/sf32lb52_bth4.c
+@@ -355,6 +355,9 @@ static bool sf32lb52_bt_emulate_cmd(struct sf32lb52_bt_priv_s *priv,
+ {
+   uint8_t params[SF32LB52_HCI_MAX_CMD_COMPLETE_RPLEN];
+ 
++  /* Read the real LE ACL capacity; do not invent 251-byte buffers. */
++  if (opcode == BT_HCI_OP_LE_READ_BUFFER_SIZE) return false;
++
+   switch (opcode)
+     {
+       case BT_HCI_OP_READ_SUPPORTED_COMMANDS:
+@@ -428,11 +431,8 @@ static bool sf32lb52_bt_emulate_cmd(struct sf32lb52_bt_priv_s *priv,
+ 
+       case BT_HCI_OP_LE_WRITE_LE_HOST_SUPP:
+       case BT_HCI_OP_LE_SET_HOST_FEATURE:
+-      case BT_HCI_OP_LE_SET_EVENT_MASK:
+       case BT_HCI_OP_LE_WRITE_DEFAULT_DATA_LEN:
+       case BT_HCI_OP_LE_SET_RPA_TIMEOUT:
+-      case BT_HCI_OP_SET_EVENT_MASK:
+-      case BT_HCI_OP_SET_EVENT_MASK_PAGE_2:
+       case BT_HCI_OP_WRITE_LOCAL_NAME:
+       case BT_HCI_OP_WRITE_SCAN_ENABLE:
+       case BT_HCI_OP_WRITE_PAGE_SCAN_ACTIVITY:
+diff --git a/chips/sf32lb52/sifli_allocateheap.c b/chips/sf32lb52/sifli_allocateheap.c
+index 62371c5..23224ee 100644
+--- a/chips/sf32lb52/sifli_allocateheap.c
++++ b/chips/sf32lb52/sifli_allocateheap.c
+@@ -27,10 +27,12 @@
+ #include <nuttx/kmalloc.h>
+ 
+ #include <stdbool.h>
++#include <assert.h>
+ 
+ #include "chip.h"
+ #include "arm_internal.h"
+ #include "bf0_hal.h"
++#include "mem_map.h"
+ 
+ extern void BSP_PIN_Init(void);
+ extern void BSP_Power_Up(bool is_deep_sleep);
+@@ -42,9 +44,14 @@ extern void BSP_Board_PreInit(void);
+ 
+ /* SRAM memory configuration for SF32LB52 */
+ 
+-#define SRAM_START  0x20000000
+-#define SRAM_SIZE   0x00080000    /* 512 KB */
+-#define SRAM_END    (SRAM_START + SRAM_SIZE)
++/* The SDK reserves the top 0x500 bytes for ROM configuration (0x100)
++ * and the HCPU/LCPU mailbox (0x400). They must never be heap memory. */
++#define SRAM_END    (HCPU_RAM_DATA_END_ADDR + 1u)
++
++_Static_assert(SRAM_END <= HCPU_CUSTOM_CONFIG_START_ADDR,
++               "heap overlaps HCPU ROM configuration");
++_Static_assert(SRAM_END <= HPSYS_MBOX_BUF_ADDR,
++               "heap overlaps Bluetooth mailbox");
+ 
+ /* PSRAM memory configuration for SF32LB52 (MPI1 SBUS) */
+ 
+@@ -162,6 +169,7 @@ void up_allocate_heap(FAR void **heap_start, size_t *heap_size)
+ {
+   /* The heap starts at g_idle_topstack and extends to the end of SRAM */
+   
++  DEBUGASSERT(g_idle_topstack < SRAM_END);
+   *heap_start = (FAR void *)g_idle_topstack;
+   *heap_size  = SRAM_END - g_idle_topstack;
+ }

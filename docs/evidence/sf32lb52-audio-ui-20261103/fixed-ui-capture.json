@@ -1,0 +1,75 @@
+{
+  "input": "fixed-ui-pcm-dump.log",
+  "wav": "fixed-ui-capture.wav",
+  "sample_rate": 16000,
+  "channels": 1,
+  "bits": 16,
+  "frames": 110592,
+  "seconds": 6.912,
+  "pcm_bytes": 221184,
+  "fnv1a": "00f55d05",
+  "checksum_verified": true,
+  "peak": 1699,
+  "rms": 196.873,
+  "dc_mean": -0.197,
+  "nonzero_samples": 109705,
+  "clipped_samples": 0,
+  "half_second_blocks": [
+    {
+      "peak": 104,
+      "rms": 30.614
+    },
+    {
+      "peak": 106,
+      "rms": 29.588
+    },
+    {
+      "peak": 125,
+      "rms": 31.846
+    },
+    {
+      "peak": 115,
+      "rms": 30.932
+    },
+    {
+      "peak": 445,
+      "rms": 73.014
+    },
+    {
+      "peak": 667,
+      "rms": 164.996
+    },
+    {
+      "peak": 1699,
+      "rms": 388.423
+    },
+    {
+      "peak": 920,
+      "rms": 265.739
+    },
+    {
+      "peak": 1502,
+      "rms": 398.736
+    },
+    {
+      "peak": 1593,
+      "rms": 287.558
+    },
+    {
+      "peak": 853,
+      "rms": 182.258
+    },
+    {
+      "peak": 116,
+      "rms": 34.367
+    },
+    {
+      "peak": 150,
+      "rms": 32.951
+    },
+    {
+      "peak": 103,
+      "rms": 31.327
+    }
+  ]
+}

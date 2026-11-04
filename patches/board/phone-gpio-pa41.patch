@@ -1,0 +1,24 @@
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
+@@ -74 +74,7 @@
+ target_compile_definitions(apps_speaker_test PRIVATE SOC_BF0_HCPU SF32LB52X USE_HAL_DRIVER HAL_TICK_PER_SECOND=1000)
++
++# FocusMate PA41 phone dock input, kept separate from the stock gpio0..gpio2.
++if(FOCUSMATE_PHONE_GPIO OR CONFIG_FOCUSMATE_PHONE_GPIO)
++  target_sources(board PRIVATE ${NUTTX_APPS_DIR}/../contest2026_075_OpenNexus/app/focusmate/sensor/sf32lb52_phone_gpio.c)
++  target_compile_definitions(board PRIVATE CONFIG_FOCUSMATE_PHONE_GPIO=1)
++endif()
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
+@@ -404,2 +404,11 @@
+     }
++#endif
++
++#ifdef CONFIG_FOCUSMATE_PHONE_GPIO
++  {
++    extern int focus_phone_gpio_initialize(void);
++    int phone_ret = focus_phone_gpio_initialize();
++    if (phone_ret < 0)
++      syslog(LOG_ERR, "ERROR: phone GPIO initialization failed: %d\n", phone_ret);
++  }
+ #endif

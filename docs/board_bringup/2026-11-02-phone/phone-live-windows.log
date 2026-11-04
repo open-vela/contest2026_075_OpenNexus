@@ -1,0 +1,438 @@
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[phone-gpio] PA41 raw=0 present=1
+[phone-state] known=1 present=1 page=standby remaining=1500
+[pixel] page=standby tasks=3 remaining=1500 phone=1/1 round=0
+[phone-gpio] PA41 raw=1 present=0
+[phone-state] known=1 present=0 page=standby remaining=1500
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[phone-gpio] PA41 raw=0 present=1
+[phone-state] known=1 present=1 page=standby remaining=1500
+[pixel] page=standby tasks=3 remaining=1500 phone=1/1 round=0
+[phone-gpio] PA41 raw=1 present=0
+[phone-state] known=1 present=0 page=standby remaining=1500
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+[phone-gpio] PA41 raw=0 present=1
+[phone-state] known=1 present=1 page=standby remaining=1500
+[pixel] page=standby tasks=3 remaining=1500 phone=1/1 round=0
+[phone-gpio] PA41 raw=1 present=0
+[phone-state] known=1 present=0 page=standby remaining=1500
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=welcome tasks=3 remaining=1500 phone=1/0 round=0
+[pixel] page=list tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=list tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=prepare tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=wait-phone tasks=3 remaining=1500 phone=1/0 round=0
+[phone-gpio] PA41 raw=0 present=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+[phone-state] known=1 present=1 page=running remaining=1500
+nsh> [K[pixel] page=running tasks=3 remaining=1500 phone=1/1 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[phone-gpio] PA41 raw=1 present=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[phone-state] known=1 present=0 page=paused remaining=1490
+[pixel] page=paused tasks=3 remaining=1490 phone=1/0 round=1
+[phone-gpio] PA41 raw=0 present=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[phone-state] known=1 present=1 page=running remaining=1490
+[pixel] page=running tasks=3 remaining=1490 phone=1/1 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[phone-gpio] PA41 raw=1 present=0
+[phone-state] known=1 present=0 page=paused remaining=1482
+[pixel] page=paused tasks=3 remaining=1482 phone=1/0 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=pause-menu tasks=3 remaining=1482 phone=1/0 round=1
+[pixel] page=paused tasks=3 remaining=1482 phone=1/0 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[phone-gpio] PA41 raw=0 present=1
+[phone-state] known=1 present=1 page=running remaining=1482
+[pixel] page=running tasks=3 remaining=1482 phone=1/1 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[phone-gpio] PA41 raw=1 present=0
+[phone-state] known=1 present=0 page=paused remaining=1475
+[pixel] page=paused tasks=3 remaining=1475 phone=1/0 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[phone-gpio] PA41 raw=0 present=1
+[phone-state] known=1 present=1 page=running remaining=1475
+[pixel] page=running tasks=3 remaining=1475 phone=1/1 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[pixel] page=end tasks=3 remaining=1466 phone=1/1 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[phone-gpio] PA41 raw=1 present=0
+[phone-state] known=1 present=0 page=end remaining=1466
+[pixel] page=end tasks=3 remaining=1466 phone=1/0 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=review tasks=3 remaining=1466 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=summary tasks=3 remaining=1466 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=list tasks=3 remaining=1466 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=prepare tasks=3 remaining=1500 phone=1/0 round=0
+[pixel] page=list tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel-key] pressed=0x1 home=0x1 talk=0x0
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=welcome tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=list tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=prepare tasks=3 remaining=1500 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=prepare tasks=3 remaining=2700 phone=1/0 round=0
+[pixel] page=prepare tasks=3 remaining=2700 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[pixel] page=wait-phone tasks=3 remaining=2700 phone=1/0 round=0
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[phone-gpio] PA41 raw=0 present=1
+[phone-state] known=1 present=1 page=running remaining=2700
+[pixel] page=running tasks=3 remaining=2700 phone=1/1 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[pixel] page=paused tasks=3 remaining=2695 phone=1/1 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[phone-gpio] PA41 raw=1 present=0
+[phone-state] known=1 present=0 page=paused remaining=2695
+[pixel] page=paused tasks=3 remaining=2695 phone=1/0 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K[phone-gpio] PA41 raw=0 present=1
+[phone-state] known=1 present=1 page=paused remaining=2695
+[pixel] page=paused tasks=3 remaining=2695 phone=1/1 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=0
+nsh> [K[pixel] page=running tasks=3 remaining=2695 phone=1/1 round=1
+[phone-gpio] PA41 raw=1 present=0
+[phone-state] known=1 present=0 page=paused remaining=2691
+[pixel] page=paused tasks=3 remaining=2691 phone=1/0 round=1
+gpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [K

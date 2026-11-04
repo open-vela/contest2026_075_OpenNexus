@@ -1,0 +1,33 @@
+
+nsh> [Khelp
+help usage:  help [-v] [<cmd>]
+
+    .           cmp         expr        mkfatfs     rmdir       unset
+    [           dirname     false       mkfifo      set         uptime
+    ?           date        fdinfo      mkrd        sleep       usleep
+    alias       dd          free        mount       source      watch
+    unalias     df          help        mv          test        xd
+    basename    dmesg       hexdump     pidof       time        wait
+    break       echo        kill        printf      true
+    cat         env         pkill       ps          truncate
+    cd          exec        ls          pwd         uname
+    cp          exit        mkdir       rm          umount
+
+Builtin Apps:
+    speaker_test    nsh             focusmate       fb              pwm
+    mic_test        sh              serial_agent    gpio            timer
+    dumpstack       mm              adc             hello           wdog
+    i2c             ostest          buttons         lvgldemo
+nsh> [Kps
+  PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK            STACK COMMAND
+    0     0   0 FIFO     Kthread   - Ready              0000000000000000 0016016 CPU0 IDLE
+    1     0 224 RR       Kthread   - Waiting  Semaphore 0000000000000000 0015968 hpwork 0x2000d440 0x2000d488
+    2     0 100 RR       Kthread   - Waiting  Semaphore 0000000000000000 0015968 lpwork 0x2000d4c0 0x2000d508
+    5     5 100 RR       Task      - Running            0000000000000000 0015992 nsh_main
+    8     8 100 RR       Task      - Waiting  Signal    0000000000000000 0040848 focusmate -d
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kmic_test stats
+mic_test: error=-61
+nsh> [K

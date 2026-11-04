@@ -1,0 +1,43 @@
+{
+  "input": "mic-tone-dump.log",
+  "wav": "mic-tone.wav",
+  "sample_rate": 16000,
+  "channels": 1,
+  "bits": 16,
+  "frames": 48000,
+  "seconds": 3.0,
+  "pcm_bytes": 96000,
+  "fnv1a": "fdcf7c37",
+  "checksum_verified": true,
+  "peak": 668,
+  "rms": 240.604,
+  "dc_mean": -0.347,
+  "nonzero_samples": 46678,
+  "clipped_samples": 0,
+  "half_second_blocks": [
+    {
+      "peak": 24,
+      "rms": 6.546
+    },
+    {
+      "peak": 663,
+      "rms": 326.752
+    },
+    {
+      "peak": 668,
+      "rms": 308.809
+    },
+    {
+      "peak": 237,
+      "rms": 132.079
+    },
+    {
+      "peak": 233,
+      "rms": 74.556
+    },
+    {
+      "peak": 567,
+      "rms": 349.522
+    }
+  ]
+}

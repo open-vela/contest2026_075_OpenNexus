@@ -1,0 +1,145 @@
+{
+  "central": "Windows/Bleak (not iPhone)",
+  "events": [
+    {
+      "t": 193560.754,
+      "event": "advertisement",
+      "name": "FocusMate",
+      "address": "REDACTED_DEVICE_ADDRESS"
+    },
+    {
+      "t": 193563.181,
+      "event": "connected",
+      "services": [
+        "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+      ]
+    },
+    {
+      "t": 193563.249,
+      "event": "identity",
+      "value": "FocusMate BLE v1"
+    },
+    {
+      "t": 193563.426,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193563.577,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193563.687,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193563.852,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193564.003,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193564.113,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193564.251,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193564.402,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193564.574,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193564.706,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193564.837,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193564.968,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193565.143,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193565.275,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193565.406,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193565.537,
+      "event": "notification",
+      "message": {
+        "type": "pong"
+      }
+    },
+    {
+      "t": 193565.537,
+      "event": "ping_pass",
+      "count": 16
+    },
+    {
+      "t": 193565.729,
+      "event": "disconnected"
+    }
+  ],
+  "passed": true
+}

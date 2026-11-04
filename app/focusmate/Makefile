@@ -18,6 +18,9 @@ CSRCS += core/focus_state.c core/focus_timer.c
 CSRCS += core/focus_flow.c ui/focus_pixel.c
 CSRCS += agent/focus_agent.c
 CSRCS += sensor/phone_sensor.c
+ifeq ($(CONFIG_FOCUSMATE_PHONE_GPIO),y)
+CSRCS += sensor/phone_gpio.c
+endif
 CSRCS += storage/focus_storage.c
 CSRCS += ui/focus_ui.c
 CSRCS += ui/lv_font_simsun_24_cjk.c

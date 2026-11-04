@@ -1,0 +1,14 @@
+
+nsh> [Kls /dev/phone0
+ /dev/phone0
+nsh> [Kgpio /dev/phone0
+Driver: /dev/phone0
+  Input pin (pull-up):     Value=1
+nsh> [Kps
+  PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK            STACK COMMAND
+    0     0   0 FIFO     Kthread   - Ready              0000000000000000 0016016 CPU0 IDLE
+    1     0 224 RR       Kthread   - Waiting  Semaphore 0000000000000000 0015968 hpwork 0x2000d3c0 0x2000d408
+    2     0 100 RR       Kthread   - Waiting  Semaphore 0000000000000000 0015968 lpwork 0x2000d440 0x2000d488
+    5     5 100 RR       Task      - Running            0000000000000000 0015992 nsh_main
+    8     8 100 RR       Task      - Ready              0000000000000000 0040848 focusmate -d
+nsh> [K

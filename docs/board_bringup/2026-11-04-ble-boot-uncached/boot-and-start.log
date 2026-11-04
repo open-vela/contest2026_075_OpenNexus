@@ -1,0 +1,72 @@
+xd 0xe000ed14 4
+Hex dump:
+0000: 01 02 02 00                                     ....
+nsh> [Kfocusmate_remind list
+[0m[cron] No cron file, starting fresh
+
+[0m[0m[cron] Cron started (0 jobs, interval 1s)
+
+[0m[reminder] scheduler ready=1 engine=ai_agent/cron_service poll=1s
+[reminder] jobs=0 now=2085898160
+nsh> [Kfocusmate_ble nocache
+[ble-test] D-cache disabled at boot; no runtime switch
+nsh> [Kfocusmate_ble heap
+[ble-memory] heap integrity check passed
+nsh> [Kfocusmate_ctl status
+[reminder-ui] pending=0 visible=0 title=
+nsh> [pixel-status] page=standby tasks=3 selected=-1 remaining=1500 s[Keconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_ble start
+[ble-status] daemon=24 host=0 advertising=0 connected=0 notify=0 rx=0 tx=0 pending=0 phone_https_report=0 error=0
+[ble-worker] loops=0 processed=0 queued=0 head=0 injected=0
+[ble-hci] host_tx=0 host_rx=0
+[h4-file] opened /dev/ttyHCI0; cross-task file I/O
+[0mdev:0: Sending HCI_RESET
+
+[0m[hci-command] op=0c03 params=0
+nsh> [K[hci-event] complete op=0c03 status=00
+[hci-command] op=1003 params=0
+[hci-event] complete op=1003 status=00
+[hci-command] op=1001 params=0
+[hci-event] complete op=1001 status=00
+[hci-command] op=1002 params=0
+[hci-event] complete op=1002 status=00
+[hci-command] op=2003 params=0
+[hci-event] complete op=2003 status=00
+[hci-command] op=2002 params=0
+[hci-event] complete op=2002 status=00
+[hci-command] op=0c6d params=2
+[hci-event] complete op=0c6d status=00
+[hci-command] op=2001 params=8
+[hci-event] complete op=2001 status=00
+[hci-command] op=1004 params=1
+[hci-event] complete op=1004 status=00
+[hci-command] op=1005 params=0
+[hci-event] complete op=1005 status=00
+[hci-command] op=0c56 params=1
+[hci-event] complete op=0c56 status=00
+[hci-command] op=0c45 params=1
+[hci-event] complete op=0c45 status=00
+[hci-command] op=0c13 params=248
+[hci-event] complete op=0c13 status=00
+[hci-command] op=0c24 params=3
+[hci-event] complete op=0c24 status=00
+[hci-command] op=0c18 params=2
+[hci-event] complete op=0c18 status=00
+[hci-command] op=080f params=2
+[hci-event] complete op=080f status=00
+[hci-command] op=0c01 params=8
+[hci-event] complete op=0c01 status=00
+[hci-command] op=1009 params=0
+[hci-event] complete op=1009 status=00
+[ble] host/service init result=0
+[hci-command] op=2005 params=6
+[hci-event] complete op=2005 status=00
+[hci-command] op=2006 params=15
+[hci-event] complete op=2006 status=00
+[hci-command] op=2008 params=32
+[hci-event] complete op=2008 status=00
+[hci-command] op=2009 params=32
+[hci-event] complete op=2009 status=00
+[hci-command] op=200a params=1
+[hci-event] complete op=200a status=00
+[ble] advertising FocusMate legacy/NUS result=0

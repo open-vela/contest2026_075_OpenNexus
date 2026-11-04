@@ -1,0 +1,13 @@
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
+@@ -65,3 +65,10 @@
+     SRCS
+     md5_test.c)
+ endif()
++
++# FocusMate standalone board speaker diagnostic (not an audio driver).
++nuttx_add_application(NAME speaker_test STACKSIZE 4096 PRIORITY 100
++  SRCS ${NUTTX_APPS_DIR}/../contest2026_075_OpenNexus/app/focusmate/diagnostics/speaker_test.c)
++get_target_property(FM_BOARD_INCLUDES board INCLUDE_DIRECTORIES)
++target_include_directories(apps_speaker_test PRIVATE ${FM_BOARD_INCLUDES})
++target_compile_definitions(apps_speaker_test PRIVATE SOC_BF0_HCPU SF32LB52X USE_HAL_DRIVER HAL_TICK_PER_SECOND=1000)

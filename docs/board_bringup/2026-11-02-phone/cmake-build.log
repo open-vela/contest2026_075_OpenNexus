@@ -1,0 +1,72 @@
+[1/45] cd $OPENVELA_ROOT/cmake_out/sf32lb52_devkit_lcd/libs/libc/misc && /usr/bin/cmake -E touch $OPENVELA_ROOT/nuttx/libs/libc/misc/lib_utsname.c
+[2/45] cd $OPENVELA_ROOT/nuttx && /usr/bin/cmake -DKCONFIG_CONFIG=$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig -DNUTTX_DIR=$OPENVELA_ROOT/nuttx -DCMAKE_BINARY_DIR=$OPENVELA_ROOT/cmake_out/sf32lb52_devkit_lcd -P $OPENVELA_ROOT/nuttx/cmake/nuttx_generate_dts.cmake
+[3/45] Generating bin output directories
+[4/45] Building C object boards/CMakeFiles/board.dir/__/dummy.c.o
+[5/45] Building C object libs/libc/CMakeFiles/c.dir/misc/lib_utsname.c.o
+[6/45] Building C object boards/CMakeFiles/board.dir/boardctl.c.o
+[7/45] Building C object boards/CMakeFiles/board.dir$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_gpio.c.o
+[8/45] Building C object boards/CMakeFiles/board.dir$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/bsp_init.c.o
+[9/45] Building C object boards/CMakeFiles/board.dir$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c.o
+[10/45] Building C object boards/CMakeFiles/board.dir$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/sf32lb52_buttons.c.o
+[11/45] Building C object boards/CMakeFiles/board.dir$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/bsp_lcd_tp.c.o
+[12/45] Building C object apps/CMakeFiles/apps.dir/dummy.c.o
+[13/45] Building C object boards/CMakeFiles/board.dir$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/bsp_pinmux.c.o
+[14/45] Building C object boards/CMakeFiles/board.dir$OPENVELA_ROOT/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/bsp_power.c.o
+[15/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/focusmate_main.c.o
+[16/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/core/focus_state.c.o
+[17/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/core/focus_timer.c.o
+[18/45] Building C object boards/CMakeFiles/board.dir$OPENVELA_ROOT/contest2026_075_OpenNexus/app/focusmate/sensor/sf32lb52_phone_gpio.c.o
+[19/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/core/focus_flow.c.o
+[20/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/sensor/phone_sensor.c.o
+[21/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/agent/focus_agent.c.o
+$OPENVELA_ROOT/apps/packages/demos/contest2026_075_focusmate/agent/focus_agent.c:213:12: warning: 'parse_plan_json' defined but not used [-Wunused-function]
+  213 | static int parse_plan_json(fm_session_t *sess, const char *json_str)
+      |            ^~~~~~~~~~~~~~~
+[22/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/storage/focus_storage.c.o
+[23/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/sensor/phone_gpio.c.o
+[24/45] Building C object apps/external/android/CMakeFiles/android.dir/dummy.c.o
+[25/45] Building C object CMakeFiles/nuttx.dir/empty.c.o
+[26/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/ui/focus_pixel.c.o
+[27/45] Linking C static library boards/libboard.a
+[28/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/ui/focus_ui.c.o
+[29/45] Linking C static library apps/external/android/libandroid.a
+[30/45] Linking C static library apps/libapps.a
+[31/45] Building C object apps/packages/demos/contest2026_075_focusmate/CMakeFiles/apps_focusmate.dir/ui/lv_font_simsun_24_cjk.c.o
+[32/45] Linking C static library apps/packages/demos/contest2026_075_focusmate/libapps_focusmate.a
+[33/45] Linking C static library libs/libc/libc.a
+[34/45] Linking CXX executable nuttx
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: nuttx has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+           flash:     2344564 B        16 MB     13.97%
+            sram:       84168 B       512 KB     16.05%
+           psram:           0 B         8 MB      0.00%
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: .note.gnu.build-id section discarded, --build-id ignored
+[35/45] Generating nuttx.bin
+[36/45] Generating allsyms_first.c
+[37/45] Building C object CMakeFiles/first_link.dir/allsyms_first.c.o
+[38/45] Linking CXX executable first_link
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: first_link has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+           flash:     2492420 B        16 MB     14.86%
+            sram:      137160 B       512 KB     26.16%
+           psram:           0 B         8 MB      0.00%
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: .note.gnu.build-id section discarded, --build-id ignored
+[39/45] Generating allsyms_second.c
+[40/45] Building C object CMakeFiles/second_link.dir/allsyms_second.c.o
+[41/45] Linking CXX executable second_link
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: second_link has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+           flash:     2492420 B        16 MB     14.86%
+            sram:      137160 B       512 KB     26.16%
+           psram:           0 B         8 MB      0.00%
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: .note.gnu.build-id section discarded, --build-id ignored
+[42/45] Generating allsyms_final.c
+[43/45] Building C object CMakeFiles/final_nuttx.dir/allsyms_final.c.o
+[44/45] Linking CXX executable final_nuttx
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: final_nuttx has a LOAD segment with RWX permissions
+Memory region         Used Size  Region Size  %age Used
+           flash:     2492420 B        16 MB     14.86%
+            sram:      137160 B       512 KB     26.16%
+           psram:           0 B         8 MB      0.00%
+$OPENVELA_ROOT/prebuilts/gcc/linux-x86_64/arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.4.0/../../../../arm-none-eabi/bin/ld: warning: .note.gnu.build-id section discarded, --build-id ignored
+[45/45] Generating System.map

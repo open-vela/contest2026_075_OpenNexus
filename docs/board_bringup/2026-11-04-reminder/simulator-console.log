@@ -1,0 +1,31 @@
+focusmate_remind after 3 "模拟器提醒"
+[  154.852710] [15] [  INFO] [ap] [cron] No cron file, starting fresh
+[  154.856188] [15] [  INFO] [ap] [cron] Cron started (0 jobs, interval 1s)
+[reminder] scheduler ready=1 engine=ai_agent/cron_service poll=1s
+[  154.883104] [14] [  INFO] [ap] [cron] Saved 1 cron jobs
+[  154.885807] [14] [  INFO] [ap] [cron] Added job: focusmate-once (00000000) ki
+ind=at next=1793789981 ch=system:cron
+[reminder] SCHEDULED id=00000000 delay=3 due=1793789981 persisted=1 title=模拟器
+器提醒
+goldfish-armv8a-ap> [  154.896866] [19] [ DEBUG] [ap] [cron] Check job[0] 'focus
+smate-once': enabled=1 next_run=1793789981 now=1793789978
+[  155.914680] [19] [ DEBUG] [ap] [cron] Check job[0] 'focusmate-once': enabled=
+=1 next_run=1793789981 now=1793789979
+[  156.924126] [19] [ DEBUG] [ap] [cron] Check job[0] 'focusmate-once': enabled=
+=1 next_run=1793789981 now=1793789980
+[  157.943578] [19] [ DEBUG] [ap] [cron] Check job[0] 'focusmate-once': enabled=
+=1 next_run=1793789981 now=1793789981
+[  157.947422] [19] [  INFO] [ap] [cron] Cron job firing: focusmate-once (000000
+000)
+[  157.950983] [19] [  INFO] [ap] [cron] Executing action: focusmate_prompt args
+s={"title":"模拟器提醒"}
+[reminder] FIRED epoch=1793789981 title=模拟器提醒 queue=delivered
+[  157.963100] [19] [  INFO] [ap] [cron] Action focusmate_prompt OK: UI event qu
+ueued
+[  157.964396] [19] [  INFO] [ap] [cron] Deleting one-shot: focusmate-once
+[reminder-ui] received title=模拟器提醒
+[reminder-ui] SHOWN title=模拟器提醒
+[  158.024789] [19] [  INFO] [ap] [cron] Saved 0 cron jobs
+focusmate_remind list
+[reminder] jobs=0 now=1793790123
+goldfish-armv8a-ap>

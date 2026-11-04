@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-04",
+  "scope": "step 1: isolated real cron + screen; no LLM/ASR/voice/BLE",
+  "firmware_sha256": "c176ce1ac4897cf408c198b14a512a9e26d55039b2076303d2a53ab191e125b6",
+  "flash_verified": true,
+  "real_board_fire_count": 1,
+  "scheduled_delay_seconds": 60,
+  "host_observed_fire_seconds": 59.74,
+  "host_observed_ui_seconds": 59.831,
+  "cancel_no_fire": true,
+  "duplicate_guard": true,
+  "user_confirmed_screen_and_start_button": true,
+  "final_prepare_without_countdown": true,
+  "simulator_executed": true,
+  "absolute_clock_calibrated": false,
+  "power_cycle_recovery_verified": false,
+  "github_pushed": false
+}

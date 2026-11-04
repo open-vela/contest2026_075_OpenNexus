@@ -1,0 +1,37 @@
+{
+  "sifli": {
+    "base": "af6f365eaa04a674af0467aa1a803bc4c77691ba",
+    "paths": [
+      "boards/sf32lb52/drivers/input/ft6146.c",
+      "boards/sf32lb52/sf32lb52_devkit_lcd/configs/nsh/defconfig",
+      "boards/sf32lb52/sf32lb52_devkit_lcd/include/board.h",
+      "boards/sf32lb52/sf32lb52_devkit_lcd/scripts/ld.script",
+      "boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt",
+      "boards/sf32lb52/sf32lb52_devkit_lcd/src/etc/init.d/rcS",
+      "boards/sf32lb52/sf32lb52_devkit_lcd/src/sf32lb52_buttons.c",
+      "boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c",
+      "chips/sf32lb52/Kconfig",
+      "chips/sf32lb52/sf32lb52_bth4.c",
+      "chips/sf32lb52/sifli_allocateheap.c"
+    ]
+  },
+  "nuttx": {
+    "base": "dd92bcf425738734d1b8aed09c2bd4dbe3f2e438",
+    "paths": [
+      "arch/arm/src/armv8-m/arm_cache.c",
+      "tools/mkallsyms.py"
+    ]
+  },
+  "ai-agent": {
+    "base": "31faed70f683a6f5e690437c5507891360f0814a",
+    "paths": [
+      "CMakeLists.txt",
+      "include/agent_config.h",
+      "src/core/agent_loop.c",
+      "src/infra/vela_tls.c",
+      "src/stubs.c",
+      "src/voice/audio_capture.c",
+      "src/voice/voice_channel.c"
+    ]
+  }
+}

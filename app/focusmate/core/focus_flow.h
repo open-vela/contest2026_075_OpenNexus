@@ -5,7 +5,8 @@
 #define FLOW_TITLE 160
 typedef enum { P_STANDBY, P_WELCOME, P_LIST, P_ADD, P_RECORD,
  P_CONFIRM, P_PREPARE, P_WAIT, P_RUNNING, P_PAUSED, P_END,
- P_REVIEW, P_MORE, P_HELP, P_SUMMARY, P_PAUSE_MENU, P_DETAIL, P_NOTE } flow_page;
+ P_REVIEW, P_MORE, P_HELP, P_SUMMARY, P_PAUSE_MENU, P_DETAIL, P_NOTE,
+ P_VOICE_READY } flow_page;
 typedef struct { unsigned id; char title[FLOW_TITLE]; bool done; } flow_task;
 typedef struct {
  flow_page page, before_record, before_end;
@@ -21,6 +22,8 @@ void flow_init(focus_flow *f);
 void flow_action(focus_flow *f, const char *action);
 void flow_phone(focus_flow *f, bool present);
 void flow_poll(focus_flow *f, unsigned elapsed_ms);
+void flow_phone_unavailable(focus_flow *f);
+void flow_capture_done(focus_flow *f, bool signal);
 void flow_tick(focus_flow *f, unsigned seconds);
 const char *flow_page_name(flow_page p);
 const char *flow_title(const focus_flow *f);

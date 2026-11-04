@@ -1,0 +1,1 @@
+Repository log copies have trailing whitespace and line endings normalized. Original Windows serial/flash logs and PCM recordings remain under output/firmware/2026-11-03 on the Windows workspace. Audio and base64 dumps are not included in Git.

@@ -1,0 +1,71 @@
+nsh> [Kserial_agent
+[0m[cfgstore] Config store ready at /data/serial_agent/config/config.json
+[0m[0m[bus] Message bus initialized (depth 16)
+[0m[0m[memory] Initializing memory store at /data/serial_agent
+[0m[0m[memory] Created file: /data/serial_agent/config/SOUL.md
+[0m[0m[memory] Created file: /data/serial_agent/config/USER.md
+[0m[0m[memory] Created file: /data/serial_agent/memory/MEMORY.md
+[0m[0m[memory] Created file: /data/serial_agent/config/HEARTBEAT.md
+[0m[0m[memory] Created file: /data/serial_agent/config/cron.json
+[0m[0m[memory] Created directory: /data/serial_agent/memory/daily
+[0m[0m[memory] Memory store initialized successfully
+[0m[0m[session] Session manager initialized at /data/serial_agent/sessions
+[0m[0m[33m[llm] No API key. Use CLI: set_llm <preset> <key>
+[0m[0m[llm] LLM config updated atomically: api.deepseek.com/v1/chat/completions (model: deepseek-chat)
+[0m[0m[llm_router] Router initialized: 0 backends, profile=0
+[0m[0m[guard] Tool guard initialized (max_input=32768, rate_window=60s, rate_max=10)
+[0m[0m[skills] Initializing skills system
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/weather.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/daily-briefing.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/skill-creator.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/system-health.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/reminder.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/note-taker.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/translate.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/news-digest.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/feishu-test.md
+[0m[0m[skills] Installed built-in skill: /data/serial_agent/skills/task-manager.md
+[0m[0m[skills] Skills system ready (10 built-in)
+[0m[0m[agent] Agent loop initialized
+[0m
+DEVICE_READY Upstream ai_agent core on SF32LB52; USB host HTTP transport; no tools/voice/IP interface
+USER 请只回复：USB链路已打通，校验码482731。
+[0m[agent] Agent loop started, free heap: 7875040
+[0m[0m[agent] Buffers: ctx=8192 hist=8192 tool=8192
+[0m[0m[agent] Tool output pool: 2 x 16384 bytes
+[0m[0m[agent] Tools JSON loaded: 2 bytes
+[0m
+DEVICE_ACCEPTED
+[0m[agent] Processing message from cli:usb-test
+[0m[0m[skills] Skills summary: 854 bytes
+[0m[0m[context] System prompt built: 2663 bytes
+[0m[0m[33m[llm_router] No available backend
+[0m[0m[trace:7c54529700000000] BEGIN chat=usb-test chan=cli
+[0m[0m[llm] OpenAI API with tools (model: deepseek-chat, 3286 bytes)
+[0m
+DEVICE_REPLY 让我查一下...
+CLOUD_HTTP id=1 status=200 request_bytes=3286 response_bytes=495
+[0m[llm] Response: 39 bytes text, 0 tool calls, finish=end_turn
+[0m[0m[agent] LLM resp: text=39, tool_use=0, calls=0
+[0m[0m[trace:7c54529700000000] iter=0 tool=(none) latency=1152ms llm=ok backend=-1
+[0m[0m[trace:7c54529700000000] END status=ok iters=1 tools=0 llm_ms=1152 elapsed=1s backend=-1
+[0m
+DEVICE_REPLY USB链路已打通，校验码482731。
+USER 上一条用户消息里的校验码是什么？只回复数字。
+DEVICE_ACCEPTED
+[0m[agent] Processing message from cli:usb-test
+[0m[0m[skills] Skills summary: 854 bytes
+[0m[0m[context] System prompt built: 2663 bytes
+[0m[0m[33m[llm_router] No available backend
+[0m[0m[trace:7c54529935c3b13a] BEGIN chat=usb-test chan=cli
+[0m[0m[llm] OpenAI API with tools (model: deepseek-chat, 3454 bytes)
+[0m
+CLOUD_HTTP id=2 status=200 request_bytes=3454 response_bytes=461
+DEVICE_REPLY 稍等，处理中...
+[0m[llm] Response: 6 bytes text, 0 tool calls, finish=end_turn
+[0m[0m[agent] LLM resp: text=6, tool_use=0, calls=0
+[0m[0m[trace:7c54529935c3b13a] iter=0 tool=(none) latency=1030ms llm=ok backend=-1
+[0m[0m[trace:7c54529935c3b13a] END status=ok iters=1 tools=0 llm_ms=1030 elapsed=1s backend=-1
+[0m
+DEVICE_REPLY 482731
+RESULT requests=2 replies=2

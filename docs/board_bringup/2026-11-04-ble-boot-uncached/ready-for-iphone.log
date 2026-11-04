@@ -1,0 +1,11 @@
+focusmate_ctl reminder-dismiss
+nsh> [K[reminder-ui] dismissed
+focusmate_ble heap
+[ble-memory] heap integrity check passed
+nsh> [Kfocusmate_ble status
+[ble-status] daemon=24 host=1 advertising=1 connected=0 notify=0 rx=16 tx=16 pending=0 phone_https_report=0 error=0
+[ble-worker] loops=5281 processed=16 queued=0 head=0 injected=0
+[ble-hci] host_tx=85 host_rx=130
+nsh> [Kfocusmate_ctl status
+nsh> [K[reminder-ui] pending=0 visible=0 title=
+[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real

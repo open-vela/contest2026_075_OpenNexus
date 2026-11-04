@@ -1,0 +1,22 @@
+{
+  "date": "2026-11-03",
+  "board": "SF32LB52-DevKit-LCD V1.2.1",
+  "parent_commit": "57c35389dc4f0fe1639f33c3b4da7b97909cac59",
+  "firmware": "focusmate-sf32lb52-mic.bin",
+  "firmware_bytes": 2497500,
+  "sha256": "38350d7bcbd65833b868a2c8b9c34fdbe9d53d031754c740f9a956f362069d32",
+  "flash_address": "0x12010000",
+  "flash_exit_code": 0,
+  "gpio_enabled": true,
+  "pcm_rate": 16000,
+  "pcm_channels": 1,
+  "pcm_bits": 16,
+  "frames": 48000,
+  "pcm_bytes": 96000,
+  "acoustic_input": "passed, controlled PC speaker tones matched in microphone recording",
+  "voice_intelligibility": "not tested, awaiting user",
+  "playback": "DMA completed, human audibility not yet confirmed",
+  "ui_real_voice": false,
+  "github_pushed": false,
+  "recordings_uploaded": false
+}

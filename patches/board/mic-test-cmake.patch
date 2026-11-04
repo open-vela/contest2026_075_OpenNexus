@@ -1,0 +1,12 @@
+--- a/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
++++ b/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
+@@ -80 +80,9 @@
+ endif()
++
++# FocusMate finite onboard microphone capture/playback diagnostic.
++if(FOCUSMATE_MIC_TEST)
++  nuttx_add_application(NAME mic_test STACKSIZE 8192 PRIORITY 100
++    SRCS ${NUTTX_APPS_DIR}/../contest2026_075_OpenNexus/app/focusmate/diagnostics/mic_test.c)
++  target_include_directories(apps_mic_test PRIVATE ${FM_BOARD_INCLUDES})
++  target_compile_definitions(apps_mic_test PRIVATE SOC_BF0_HCPU SF32LB52X USE_HAL_DRIVER HAL_TICK_PER_SECOND=1000)
++endif()

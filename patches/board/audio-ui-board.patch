@@ -1,0 +1,67 @@
+--- a/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
++++ b/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/CMakeLists.txt
+@@ -88 +88,7 @@
+ endif()
++
++# FocusMate PCM lower halves and read-only sampling of the power key.
++if(FOCUSMATE_BOARD_AUDIO)
++  target_sources(board PRIVATE ${NUTTX_APPS_DIR}/../contest2026_075_OpenNexus/app/focusmate/audio/sf32lb52_audio.c)
++  target_compile_definitions(board PRIVATE CONFIG_FOCUSMATE_BOARD_AUDIO=1)
++endif()
+--- a/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
++++ b/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/sifli_ap.c
+@@ -412,2 +412,11 @@
+       syslog(LOG_ERR, "ERROR: phone GPIO initialization failed: %d\n", phone_ret);
++  }
++#endif
++
++#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
++  {
++    extern int focus_board_audio_initialize(void);
++    int audio_ret = focus_board_audio_initialize();
++    if (audio_ret < 0)
++      syslog(LOG_ERR, "ERROR: audio registration failed: %d\n", audio_ret);
+   }
+--- a/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/sf32lb52_buttons.c
++++ b/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/src/sf32lb52_buttons.c
+@@ -42,2 +42,3 @@
+ 
++#define SF32LB52_BUTTON_KEY1_PIN GET_PIN_2(hwp_gpio1, 34)
+ #define SF32LB52_BUTTON_KEY2_PIN      GET_PIN_2(hwp_gpio1, 11)
+@@ -103,8 +104,13 @@
+   bool level = sifli_gpio_read(SF32LB52_BUTTON_KEY2_PIN);
+-
++  btn_buttonset_t keys;
+ #if SF32LB52_BUTTON_KEY2_ACTIVE_LOW
+-  return level ? 0 : 1;
++  keys = level ? 0 : 1;
+ #else
+-  return level ? 1 : 0;
++  keys = level ? 1 : 0;
+ #endif
++#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
++  /* Observe PA34 only. Preserve its default power/download pull-down. */
++  if (sifli_gpio_read(SF32LB52_BUTTON_KEY1_PIN)) keys |= 2;
++#endif
++  return keys;
+ }
+@@ -167,3 +173,7 @@
+ {
++#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
++  return 3;
++#else
+   return 1;
++#endif
+ }
+--- a/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/include/board.h
++++ b/vendor/sifli/boards/sf32lb52/sf32lb52_devkit_lcd/include/board.h
+@@ -33,3 +33,9 @@
+ #define BUTTON_KEY2      0
++#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
++#define BUTTON_KEY1      1
++#define BUTTON_KEY1_BIT  (1 << BUTTON_KEY1)
++#define NUM_BUTTONS      2
++#else
+ #define NUM_BUTTONS      1
++#endif
+ 

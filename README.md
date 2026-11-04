@@ -1,5 +1,8 @@
 # FocusMate — AI 桌面专注伙伴
 
+当前实板进展：[2026-11-04 验收状态与未完成事项](docs/PROGRESS_2026-11-04_zh-cn.md)。
+构建与累计平台补丁：[复现说明](docs/board_bringup/CURRENT_BUILD_zh-cn.md)。
+
 ## Local pixel migration (2026-10-17)
 
 The current development branch defaults to the new native LVGL pixel UI. Run `focusmate`; the old implementation remains available as `focusmate --legacy` (restart the emulator when switching implementations).

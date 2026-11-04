@@ -1,0 +1,56 @@
+
+nsh> [Kls /dev
+/dev:
+ adc0
+ buttons
+ config0
+ console
+ fb0
+ gpio0
+ gpio1
+ gpio2
+ i2c0
+ i2c1
+ input0
+ lcd0
+ mmcsd0
+ null
+ phone0
+ pwm0
+ ram0
+ rtc0
+ spi1
+ timer0
+ ttyACM0
+ ttyS0
+ urandom
+ watchdog0
+nsh> [Kls /dev/audio
+nsh: ls: stat failed: 2
+nsh> [Kps
+  PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK            STACK COMMAND
+    0     0   0 FIFO     Kthread   - Ready              0000000000000000 0016016 CPU0 IDLE
+    1     0 224 RR       Kthread   - Waiting  Semaphore 0000000000000000 0015968 hpwork 0x2000d3c0 0x2000d408
+    2     0 100 RR       Kthread   - Waiting  Semaphore 0000000000000000 0015968 lpwork 0x2000d440 0x2000d488
+    5     5 100 RR       Task      - Running            0000000000000000 0015992 nsh_main
+    8     8 100 RR       Task      - Waiting  Signal    0000000000000000 0040848 focusmate -d
+nsh> [Khelp
+help usage:  help [-v] [<cmd>]
+
+    .           cmp         expr        mkfatfs     rmdir       unset
+    [           dirname     false       mkfifo      set         uptime
+    ?           date        fdinfo      mkrd        sleep       usleep
+    alias       dd          free        mount       source      watch
+    unalias     df          help        mv          test        xd
+    basename    dmesg       hexdump     pidof       time        wait
+    break       echo        kill        printf      true
+    cat         env         pkill       ps          truncate
+    cd          exec        ls          pwd         uname
+    cp          exit        mkdir       rm          umount
+
+Builtin Apps:
+    speaker_test    sh              serial_agent    gpio            timer
+    dumpstack       mm              adc             hello           wdog
+    i2c             ostest          buttons         lvgldemo
+    nsh             focusmate       fb              pwm
+nsh> [K

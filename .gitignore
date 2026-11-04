@@ -1,2 +1,8 @@
 .env
 .opencode/
+
+# Local generated files and runtime credentials
+__pycache__/
+*.py[cod]
+node_modules/
+.venv/

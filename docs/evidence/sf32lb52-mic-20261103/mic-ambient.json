@@ -1,0 +1,43 @@
+{
+  "input": "mic-ambient-dump.log",
+  "wav": "mic-ambient.wav",
+  "sample_rate": 16000,
+  "channels": 1,
+  "bits": 16,
+  "frames": 48000,
+  "seconds": 3.0,
+  "pcm_bytes": 96000,
+  "fnv1a": "f9627796",
+  "checksum_verified": true,
+  "peak": 29,
+  "rms": 7.18,
+  "dc_mean": -0.602,
+  "nonzero_samples": 45354,
+  "clipped_samples": 0,
+  "half_second_blocks": [
+    {
+      "peak": 29,
+      "rms": 7.495
+    },
+    {
+      "peak": 29,
+      "rms": 7.273
+    },
+    {
+      "peak": 29,
+      "rms": 7.222
+    },
+    {
+      "peak": 29,
+      "rms": 7.149
+    },
+    {
+      "peak": 26,
+      "rms": 7.011
+    },
+    {
+      "peak": 27,
+      "rms": 6.914
+    }
+  ]
+}

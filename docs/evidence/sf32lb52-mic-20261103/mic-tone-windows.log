@@ -1,0 +1,12 @@
+mic_test record
+mic_test: RECORD now, 3 seconds (+250ms warmup), gain=0dB
+mic_test: DMA complete elapsed=3259ms remaining=0
+mic_test: capture result=0 remaining=0 ISR=70000000 ADC_CFG=00000a09 CH0=00010a9d
+mic_test: block=0 mean_abs=5 peak=24 clipped=0
+mic_test: block=1 mean_abs=220 peak=663 clipped=0
+mic_test: block=2 mean_abs=198 peak=668 clipped=0
+mic_test: block=3 mean_abs=106 peak=237 clipped=0
+mic_test: block=4 mean_abs=38 peak=233 clipped=0
+mic_test: block=5 mean_abs=307 peak=567 clipped=0
+mic_test: PCM s16le mono rate=16000 samples=48000 fnv1a=fdcf7c37
+nsh> [K

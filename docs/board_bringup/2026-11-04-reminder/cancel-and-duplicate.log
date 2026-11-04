@@ -1,0 +1,23 @@
+focusmate_remind after 10 "取消验证"
+[0m[cron] Saved 1 cron jobs
+
+[0m[0m[cron] Added job: focusmate-once (00000000) kind=at next=2085894338 ch=system:cron
+
+[0m[reminder] SCHEDULED id=00000000 delay=10 due=2085894338 persisted=1 title=取消验证
+nsh> [K[0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894338 now=2085894328
+
+[0m[0m[2m[cron] Check job[0] 'focusmate-once': enabled=1 next_run=2085894338 now=2085894328
+
+[0mfocusmate_remind after 10 "重复预约验证"
+[reminder] one pending appointment allowed in step 1; cancel it first
+nsh> [Kfocusmate_remind cancel 00000000
+[0m[cron] Removing job: focusmate-once (00000000)
+
+[0m[0m[cron] Saved 0 cron jobs
+
+[0m[reminder] cancel id=00000000 result=0
+nsh> [Kfocusmate_remind list
+[reminder] jobs=0 now=2085894341
+nsh> [Kfocusmate_ctl status
+nsh> [K[reminder-ui] pending=1 visible=1 title=写报告
+[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real

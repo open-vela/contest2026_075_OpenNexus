@@ -1,0 +1,150 @@
+focusmate_ctl home
+nsh> [K[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl status
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+free
+      total       used       free    maxused    maxfree  nused  nfree name
+    8753944     795592    7958352     800000    7686576    669      3 Umem
+nsh> [Kfocusmate_ctl add
+nsh> [K[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl cancel-record
+nsh> [K[board-audio] capture stopped bytes=69632 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2176 peak=126 mean=25 error=0 limit=0
+[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2176 peak=126 mean=25 error=0 limit=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl home
+nsh> [K[board-audio] capture stopped bytes=69632 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=113 mean=24 error=0 limit=0
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=113 mean=24 error=0 limit=0
+focusmate_ctl status
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_ctl add
+nsh> [K[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl cancel-record
+nsh> [K[board-audio] capture stopped bytes=67584 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=129 mean=25 error=0 limit=0
+[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=129 mean=25 error=0 limit=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl home
+nsh> [K[board-audio] capture stopped bytes=69632 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=125 mean=24 error=0 limit=0
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=125 mean=24 error=0 limit=0
+focusmate_ctl status
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_ctl add
+nsh> [K[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl cancel-record
+nsh> [K[board-audio] capture stopped bytes=67584 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=138 mean=24 error=0 limit=0
+[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=138 mean=24 error=0 limit=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl home
+nsh> [K[board-audio] capture stopped bytes=69632 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=119 mean=24 error=0 limit=0
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=119 mean=24 error=0 limit=0
+focusmate_ctl status
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_ctl add
+nsh> [K[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl cancel-record
+nsh> [K[board-audio] capture stopped bytes=67584 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=122 mean=24 error=0 limit=0
+[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=122 mean=24 error=0 limit=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl home
+nsh> [K[board-audio] capture stopped bytes=69632 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=120 mean=25 error=0 limit=0
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=120 mean=25 error=0 limit=0
+focusmate_ctl status
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_ctl add
+nsh> [K[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl cancel-record
+nsh> [K[board-audio] capture stopped bytes=67584 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=126 mean=24 error=0 limit=0
+[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=126 mean=24 error=0 limit=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl home
+nsh> [K[board-audio] capture stopped bytes=67584 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=67584 ms=2112 peak=145 mean=26 error=0 limit=0
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=67584 ms=2112 peak=145 mean=26 error=0 limit=0
+focusmate_ctl status
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_ctl add
+nsh> [K[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl cancel-record
+nsh> [K[board-audio] capture stopped bytes=67584 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=1312 mean=26 error=0 limit=0
+[pixel] page=add tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=0 ms=2112 peak=1312 mean=26 error=0 limit=0
+focusmate_ctl talk
+nsh> [K[board-audio] capture started PCM16/16000/mono ring=4096 IRQ=73 priority=4
+[pixel] page=recording tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl home
+nsh> [K[board-audio] capture stopped bytes=69632 result=0
+[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=125 mean=25 error=0 limit=0
+[pixel] page=standby tasks=3 remaining=1500 phone=1/0 round=0
+focusmate_ctl audio-status
+nsh> [K[pcm-client] active=0 playing=0 ready=0 signal=0 bytes=69632 ms=2176 peak=125 mean=25 error=0 limit=0
+focusmate_ctl status
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+ps
+  PID GROUP PRI POLICY   TYPE    NPX STATE    EVENT     SIGMASK            STACK COMMAND
+    0     0   0 FIFO     Kthread   - Ready              0000000000000000 0016016 CPU0 IDLE
+    1     0 224 RR       Kthread   - Waiting  Semaphore 0000000000000000 0015968 hpwork 0x2000d780 0x2000d7c8
+    2     0 100 RR       Kthread   - Waiting  Semaphore 0000000000000000 0015968 lpwork 0x2000d800 0x2000d848
+    5     5 100 RR       Task      - Running            0000000000000000 0015992 nsh_main
+    8     8 100 RR       Task      - Waiting  Signal    0000000000000000 0040848 focusmate -d
+nsh> [Kfree
+      total       used       free    maxused    maxfree  nused  nfree name
+    8753944    2715568    6038376    4634056    3846560    670      5 Umem
+nsh> [K

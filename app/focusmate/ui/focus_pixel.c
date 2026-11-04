@@ -4,6 +4,9 @@
 #include <lvgl/lvgl.h>
 #include <netutils/cJSON.h>
 #include <nuttx/input/buttons.h>
+#ifdef CONFIG_ARCH_CHIP_SF32LB52
+#include <arch/board/board.h>
+#endif
 #include <sys/ioctl.h>
 #include <sys/select.h>
 #include <sys/stat.h>
@@ -14,15 +17,30 @@
 #include <stdlib.h>
 #include <string.h>
 #include "core/focus_flow.h"
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+#include <mqueue.h>
+#include "audio/focus_audio.h"
+#endif
+#ifdef CONFIG_FOCUSMATE_PHONE_GPIO
+#include "sensor/phone_gpio.h"
+#endif
 #ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
 #include "voice/voice_channel.h"
 #endif
 extern const lv_font_t lv_font_simsun_24_cjk;
 #ifndef CONFIG_FOCUSMATE_HOME_MASK
+#if defined(CONFIG_ARCH_CHIP_SF32LB52) && defined(BUTTON_KEY2_BIT)
+#define CONFIG_FOCUSMATE_HOME_MASK BUTTON_KEY2_BIT
+#else
 #define CONFIG_FOCUSMATE_HOME_MASK 0
 #endif
+#endif
 #ifndef CONFIG_FOCUSMATE_TALK_MASK
+#if defined(CONFIG_FOCUSMATE_BOARD_AUDIO) && defined(BUTTON_KEY1_BIT)
+#define CONFIG_FOCUSMATE_TALK_MASK BUTTON_KEY1_BIT
+#else
 #define CONFIG_FOCUSMATE_TALK_MASK 0
+#endif
 #endif
 #define INK 0xe1edc8
 #define BG 0x14251e
@@ -34,6 +52,19 @@ static focus_flow f;
 static lv_nuttx_result_t display_resources;
 static lv_obj_t *panel,*body,*status,*timer_label,*wave[23],*notice_label,*note_input;
 static int pending, lab_sample, real_voice, voice_active, buttons_fd=-1;
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+static mqd_t control_mq=(mqd_t)-1;
+static lv_obj_t *record_time;
+#endif
+#ifdef CONFIG_FOCUSMATE_REMINDER
+#include <mqueue.h>
+#include "reminder/reminder.h"
+extern int fm_prompt_start(focus_flow *,const char *);
+static mqd_t reminder_mq=(mqd_t)-1;
+static lv_obj_t *reminder_overlay;
+static char reminder_title[FM_REMINDER_TITLE];
+static bool reminder_waiting;
+#endif
 static char pending_action[40];
 static const char *samples[]={"嗯,我想,那个,写课程报告第一节","修改简历中的项目经历","呃,我要,练习两道面试题"};
 static const char *petrows[]={"..pp....pp..","..pppppppp..",".pppppppppp.","pppppppppppp","pppeppppeppp","pppeppppeppp","ppppccccpppp",".pppppppppp.","..pppppppp..","..pp....pp.."};
@@ -62,6 +93,32 @@ static void cat(int unit){
 }
 static void heading(const char *t){label(body,t);}
 static void back(const char *a){lv_obj_t *b=button(body,"< 返回",a,true);lv_obj_set_height(b,36);}
+#ifdef CONFIG_FOCUSMATE_REMINDER
+static void reminder_close(void){
+ if(reminder_overlay){lv_obj_delete(reminder_overlay);reminder_overlay=NULL;}
+ reminder_waiting=false;
+}
+static void reminder_poll(void){
+ if(!reminder_waiting&&reminder_mq!=(mqd_t)-1){
+   struct fm_reminder_event e;ssize_t n=mq_receive(reminder_mq,(char *)&e,sizeof(e),NULL);
+   if(n==sizeof(e)&&fm_prompt_read(&e,reminder_title,sizeof(reminder_title))==0){
+     reminder_waiting=true;
+     printf("[reminder-ui] received title=%s\n",reminder_title);fflush(stdout);
+   }
+ }
+ if(!reminder_waiting||reminder_overlay)return;
+ /* Keep recording, an open focus round and its feedback intact. */
+ if(f.round_open||f.review_pending||f.page==P_RECORD||f.page==P_VOICE_READY)return;
+ reminder_overlay=lv_obj_create(panel);lv_obj_set_size(reminder_overlay,LV_PCT(100),LV_PCT(100));
+ lv_obj_set_style_bg_color(reminder_overlay,lv_color_hex(BG),0);lv_obj_set_style_bg_opa(reminder_overlay,LV_OPA_COVER,0);
+ lv_obj_set_style_pad_all(reminder_overlay,22,0);lv_obj_set_flex_flow(reminder_overlay,LV_FLEX_FLOW_COLUMN);
+ lv_obj_set_flex_align(reminder_overlay,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER);
+ label(reminder_overlay,"该行动啦");label(reminder_overlay,reminder_title);
+ button(reminder_overlay,"去专注","reminder-start",false);
+ button(reminder_overlay,"知道了","reminder-dismiss",true);
+ printf("[reminder-ui] SHOWN title=%s\n",reminder_title);fflush(stdout);
+}
+#endif
 static void save(void){
  cJSON *j=cJSON_CreateObject(),*ts=cJSON_CreateArray();int i;
  if(!j||!ts){cJSON_Delete(j);cJSON_Delete(ts);return;}
@@ -98,6 +155,9 @@ static void status_refresh(void){char s[100];
 }
 static void render(void){
  char b[256];int i;lv_obj_clean(body);timer_label=NULL;memset(wave,0,sizeof(wave));notice_label=NULL;note_input=NULL;status_refresh();
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+ record_time=NULL;
+#endif
  switch(f.page){
  case P_STANDBY:spacer();cat(10);heading("FocusMate");heading("说 你好,openvela 唤醒");spacer();button(body,"点击进入","enter",false);break;
  case P_WELCOME:cat(7);heading("你好.");heading("今天,想从哪一步开始?");spacer();button(body,"今日任务","today",false);button(body,"添加行动","add",true);break;
@@ -111,7 +171,22 @@ static void render(void){
  case P_RECORD:cat(3);heading("正在听你说...");
    {lv_obj_t *row=lv_obj_create(body);lv_obj_remove_style_all(row);lv_obj_set_size(row,LV_PCT(100),72);lv_obj_set_flex_flow(row,LV_FLEX_FLOW_ROW);lv_obj_set_flex_align(row,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER,LV_FLEX_ALIGN_CENTER);lv_obj_set_style_pad_column(row,5,0);
     for(i=0;i<23;i++){wave[i]=lv_obj_create(row);lv_obj_remove_style_all(wave[i]);lv_obj_set_size(wave[i],6,4);lv_obj_set_style_bg_opa(wave[i],LV_OPA_COVER,0);lv_obj_set_style_bg_color(wave[i],lv_color_hex(0xbfdb8b),0);}}
-   heading(real_voice?"真实收音模式":"模拟收音模式");spacer();heading("再按一下对话键\n结束语音识别");button(body,"取消","cancel-record",true);break;
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+   record_time=label(body,"00:00");
+#else
+   heading(real_voice?"真实收音模式":"模拟收音模式");
+#endif
+   spacer();heading("再按一下对话键\n结束录音");button(body,"取消","cancel-record",true);break;
+ case P_VOICE_READY:
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+   {struct focus_audio_status audio;focus_audio_get(&audio);cat(5);heading("录好了");
+    snprintf(b,sizeof(b),"%u 秒",audio.milliseconds/1000);heading(b);heading("任务识别暂不可用");spacer();
+    button(body,audio.playing?"停止回放":"听一下","play-recording",false);
+    button(body,"重新录音","talk",true);button(body,"返回添加","add",true);}
+#else
+   heading("录音已保存");button(body,"返回添加","add",false);
+#endif
+   break;
  case P_CONFIRM:back("retry");cat(4);heading("任务名对吗?");heading(f.draft);spacer();button(body,"确认无误","confirm",false);button(body,"重新输入","retry",true);break;
  case P_PREPARE:back("list");cat(4);heading(flow_title(&f));snprintf(b,sizeof(b),"本轮 %d 分钟",f.minutes);heading(b);spacer();
    {lv_obj_t *row=lv_obj_create(body);lv_obj_remove_style_all(row);lv_obj_set_size(row,LV_PCT(100),48);lv_obj_set_flex_flow(row,LV_FLEX_FLOW_ROW);lv_obj_set_style_pad_column(row,5,0);
@@ -137,11 +212,55 @@ static void render(void){
  printf("[pixel] page=%s tasks=%d remaining=%d phone=%d/%d round=%d\n",flow_page_name(f.page),f.count,f.remaining,f.phone_known,f.phone_stable,f.round_open);fflush(stdout);
 }
 static void voice_stop_cancel(void){
-#ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+ focus_audio_end(false);voice_active=0;
+#elif defined(CONFIG_EXAMPLES_AI_AGENT_VELA)
  if(voice_active){char discard[8];voice_channel_stop_with_text(discard,sizeof(discard));voice_active=0;}
 #endif
 }
 static void dispatch(const char *a){
+#ifdef CONFIG_FOCUSMATE_REMINDER
+ if(!strcmp(a,"reminder-dismiss")){reminder_close();puts("[reminder-ui] dismissed");return;}
+ if(!strcmp(a,"reminder-start")){
+   if(!reminder_waiting)return;
+   int r=fm_prompt_start(&f,reminder_title);
+   if(!r){reminder_close();save();render();puts("[reminder-ui] accepted; choose duration before focus");}
+   else printf("[reminder-ui] accept error=%d; current session preserved\n",r);
+   return;
+ }
+ if(!strcmp(a,"home")&&reminder_waiting)reminder_close();
+ else if(reminder_overlay)return;
+#endif
+
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+ if(!strcmp(a,"audio-status")){focus_audio_print();return;}
+ if(!strcmp(a,"audio-dump")){printf("[audio-dump] result=%d\n",focus_audio_dump());return;}
+ if(!strcmp(a,"voice-mode")){snprintf(f.notice,sizeof(f.notice),"当前使用真实麦克风");render();return;}
+ if(!strcmp(a,"play-recording")){
+   struct focus_audio_status audio;focus_audio_get(&audio);
+   int ret=audio.playing?focus_audio_end(true):focus_audio_play();
+   if(ret<0){printf("[pixel-audio] playback error=%d\n",ret);snprintf(f.notice,sizeof(f.notice),"回放未能开始,请重试");}
+   render();return;
+ }
+ if(!strcmp(a,"talk")){
+   if(f.page==P_RECORD){
+     int ret=focus_audio_end(true);voice_active=0;
+     struct focus_audio_status audio;focus_audio_get(&audio);flow_capture_done(&f,audio.ready);
+     if(ret<0){printf("[pixel-audio] capture error=%d\n",ret);snprintf(f.notice,sizeof(f.notice),"%s",audio.limit?"录音达到60秒,请缩短后重试":"收音中断,请重新录音");}
+   }else if(f.page==P_ADD||f.page==P_VOICE_READY){
+     int ret=focus_audio_begin();
+     if(ret<0){printf("[pixel-audio] start error=%d\n",ret);snprintf(f.notice,sizeof(f.notice),"录音未能开始,请重试");render();return;}
+     flow_action(&f,"talk");voice_active=1;
+   }else return;
+   save();render();return;
+ }
+ if(!strcmp(a,"home")||!strcmp(a,"cancel-record")||!strcmp(a,"add")||!strcmp(a,"retry")){
+   focus_audio_end(strcmp(a,"cancel-record")!=0);voice_active=0;
+ }
+#endif
+#ifdef CONFIG_FOCUSMATE_PHONE_GPIO
+ if(!strcmp(a,"phone-in")||!strcmp(a,"phone-out")){snprintf(f.notice,sizeof(f.notice),"已启用真实开关，请操作微动开关");render();return;}
+#endif
  if(!strcmp(a,"phone-in")){flow_phone(&f,true);return;}
  if(!strcmp(a,"phone-out")){flow_phone(&f,false);return;}
  if(!strcmp(a,"sound")){f.sound=!f.sound;return;}
@@ -186,6 +305,9 @@ static void cli(char *line){
  line[strcspn(line,"\r\n")]=0;
  if(!strncmp(line,"speech ",7)){textcopy(f.speech,line+7,sizeof(f.speech));return;}
  if(!strncmp(line,"note ",5)){textcopy(f.note,line+5,sizeof(f.note));save();render();return;}
+#ifdef CONFIG_FOCUSMATE_REMINDER
+ if(!strcmp(line,"status"))printf("[reminder-ui] pending=%d visible=%d title=%s\n",reminder_waiting,reminder_overlay!=NULL,reminder_waiting?reminder_title:"");
+#endif
  if(!strcmp(line,"status")){printf("[pixel-status] page=%s tasks=%d selected=%d remaining=%d seconds=%d total=%d phone=%d/%d pause=%s voice=%s\n",flow_page_name(f.page),f.count,f.selected,f.remaining,f.round_seconds,f.total_seconds,f.phone_known,f.phone_stable,f.phone_pause?"phone":"manual",real_voice?"real":"mock");return;}
  if(!strncmp(line,"asr ",4)||!strncmp(line,"speak ",6)){
 #ifdef CONFIG_EXAMPLES_AI_AGENT_VELA
@@ -203,23 +325,76 @@ static void cli(char *line){
  dispatch(line);
 }
 int focus_pixel_main(int argc,char **argv){
- (void)argc;(void)argv;pending=0;real_voice=0;voice_active=0;lab_sample=0;flow_init(&f);mkdir(CONFIG_FOCUSMATE_DATA_DIR,0755);bool fresh_data=access(SNAP,F_OK)!=0;load();
+ bool no_cli=false;int argi;for(argi=1;argi<argc;argi++){if(!strcmp(argv[argi],"-d")||!strcmp(argv[argi],"--no-cli"))no_cli=true;}pending=0;real_voice=0;voice_active=0;lab_sample=0;flow_init(&f);mkdir(CONFIG_FOCUSMATE_DATA_DIR,0755);bool fresh_data=access(SNAP,F_OK)!=0;load();
  if(fresh_data){const char *t[]={"整理简历中的项目经历","列出课程报告的目录","练习两道面试题"};int i;for(i=0;i<3;i++){f.tasks[i].id=i+1;textcopy(f.tasks[i].title,t[i],FLOW_TITLE);}f.count=3;}
  if(display_init())return 1;
  buttons_fd=open("/dev/buttons",O_RDONLY|O_NONBLOCK);btn_buttonset_t oldkeys=0;
+ if(buttons_fd>=0)read(buttons_fd,&oldkeys,sizeof(oldkeys));
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+ real_voice=1;
+ struct mq_attr control_attr={0};control_attr.mq_maxmsg=8;control_attr.mq_msgsize=32;
+ control_mq=mq_open("/focusmate_ui",O_CREAT|O_RDONLY|O_NONBLOCK,0600,&control_attr);
+ printf("[pixel-audio] PCM device mode; control=%d; no mock transcription\n",(int)control_mq);
+ bool last_playing=false;
+#endif
  printf("FocusMate pixel UI. CLI: enter today add talk confirm retry list select minutes 15|25|45 start phone-in phone-out pause resume home fast timeout done status; speech <text>; pcm <path>. Legacy: focusmate --legacy\n");
+ printf("[pixel-key] device=%d home=0x%lx talk=0x%lx\n",buttons_fd,(unsigned long)CONFIG_FOCUSMATE_HOME_MASK,(unsigned long)CONFIG_FOCUSMATE_TALK_MASK);
+ #ifdef CONFIG_FOCUSMATE_PHONE_GPIO
+ unsigned phone_acc=0;int phone_fault=-1;
+ printf("[phone-input] hardware=PA41 active-low; simulator phone events disabled\n");
+#endif
+#ifdef CONFIG_FOCUSMATE_REMINDER
+ struct mq_attr reminder_attr={0};reminder_attr.mq_maxmsg=4;reminder_attr.mq_msgsize=sizeof(struct fm_reminder_event);
+ reminder_mq=mq_open(FM_REMINDER_QUEUE,O_CREAT|O_RDONLY|O_NONBLOCK,0600,&reminder_attr);
+ printf("[reminder-ui] queue=%d\n",(int)reminder_mq);
+#endif
  render();unsigned long long prev=now_ms(),tick_acc=0,wave_acc=0,save_acc=0;unsigned phase=0;char line[320];size_t used=0;bool quit=false;
  while(!quit){
    unsigned long long current=now_ms();unsigned dt=(unsigned)(current-prev);prev=current;
-   flow_page old=f.page;bool known=f.phone_known,stable=f.phone_stable;flow_poll(&f,dt);
+   flow_page old=f.page;bool known=f.phone_known,stable=f.phone_stable;
+#ifdef CONFIG_FOCUSMATE_PHONE_GPIO
+   phone_acc+=dt;
+   if(phone_acc>=50){
+     phone_acc=0;bool present=false;int ret=focus_phone_gpio_read(&present);
+     if(ret<0){if(phone_fault!=1){flow_phone_unavailable(&f);phone_fault=1;save();render();}}
+     else {if(phone_fault==1)f.notice[0]=0;phone_fault=0;flow_phone(&f,present);}
+   }
+#endif
+   flow_poll(&f,dt);
+#ifdef CONFIG_FOCUSMATE_PHONE_GPIO
+   if(known!=f.phone_known||stable!=f.phone_stable){printf("[phone-state] known=%d present=%d page=%s remaining=%d\n",f.phone_known,f.phone_stable,flow_page_name(f.page),f.remaining);fflush(stdout);}
+#endif
    if(old!=f.page||known!=f.phone_known||stable!=f.phone_stable){save();render();}
    if(f.page==P_RUNNING){tick_acc+=dt;if(tick_acc>=1000){unsigned sec=tick_acc/1000;tick_acc%=1000;flow_tick(&f,sec);if(f.page!=P_RUNNING){save();render();}else if(timer_label){char t[20];snprintf(t,sizeof(t),"%02d:%02d",f.remaining/60,f.remaining%60);lv_label_set_text(timer_label,t);}}}else tick_acc=0;
    save_acc+=dt;if(save_acc>=10000){save_acc=0;if(f.page==P_RUNNING)save();}
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+   if(f.page==P_RECORD){
+     struct focus_audio_status audio;focus_audio_get(&audio);
+     if(!audio.active){voice_active=0;flow_capture_done(&f,audio.ready);if(audio.error)snprintf(f.notice,sizeof(f.notice),"%s",audio.limit?"录音达到60秒,请缩短后重试":"收音中断,请重新录音");save();render();}
+     else {wave_acc+=dt;if(wave_acc>=64){wave_acc=0;int i;for(i=0;i<23;i++)if(wave[i])lv_obj_set_height(wave[i],4+audio.levels[i]*60/100);
+       if(record_time){char text[20];snprintf(text,sizeof(text),"%02u:%02u",audio.milliseconds/60000,(audio.milliseconds/1000)%60);lv_label_set_text(record_time,text);}}}
+   }
+   {struct focus_audio_status audio;focus_audio_get(&audio);if(f.page==P_VOICE_READY&&audio.playing!=last_playing)render();last_playing=audio.playing;}
+   if(control_mq!=(mqd_t)-1){char action[33];ssize_t got=mq_receive(control_mq,action,32,NULL);if(got>0){action[got]=0;cli(action);}}
+#endif
    if(f.page==P_RECORD&&!real_voice){wave_acc+=dt;if(wave_acc>=160){wave_acc=0;phase++;if(f.sound){f.heard=true;snprintf(f.draft,sizeof(f.draft),"%s",f.speech);}int i;for(i=0;i<23;i++)if(wave[i])lv_obj_set_height(wave[i],f.sound?8+(i*17+phase*23)%56:4);}}
-   if(buttons_fd>=0){btn_buttonset_t keys=0;if(read(buttons_fd,&keys,sizeof(keys))==sizeof(keys)){btn_buttonset_t pressed=keys&~oldkeys;if(pressed&CONFIG_FOCUSMATE_HOME_MASK)dispatch("home");if(pressed&CONFIG_FOCUSMATE_TALK_MASK)dispatch("talk");oldkeys=keys;}}
+   if(buttons_fd>=0){btn_buttonset_t keys=0;if(read(buttons_fd,&keys,sizeof(keys))==sizeof(keys)){btn_buttonset_t pressed=keys&~oldkeys;if(pressed){printf("[pixel-key] pressed=0x%lx home=0x%lx talk=0x%lx\n",(unsigned long)pressed,(unsigned long)CONFIG_FOCUSMATE_HOME_MASK,(unsigned long)CONFIG_FOCUSMATE_TALK_MASK);fflush(stdout);}if(pressed&CONFIG_FOCUSMATE_HOME_MASK)dispatch("home");if(pressed&CONFIG_FOCUSMATE_TALK_MASK)dispatch("talk");oldkeys=keys;}}
+#ifdef CONFIG_FOCUSMATE_REMINDER
+   reminder_poll();
+#endif
    lv_timer_handler();if(pending){char a[40];snprintf(a,sizeof(a),"%s",pending_action);pending=0;dispatch(a);}
+   if(no_cli){usleep(20000);continue;}
    fd_set rd;FD_ZERO(&rd);FD_SET(0,&rd);struct timeval timeout={0,20000};int ready=select(1,&rd,NULL,NULL,&timeout);
    if(ready>0){char c;if(read(0,&c,1)==1){if(c=='\n'||c=='\r'){line[used]=0;if(!strcmp(line,"quit"))quit=true;else if(used)cli(line);used=0;}else if(used<sizeof(line)-1)line[used++]=c;}}
  }
+ #ifdef CONFIG_FOCUSMATE_PHONE_GPIO
+ focus_phone_gpio_close();
+#endif
+#ifdef CONFIG_FOCUSMATE_BOARD_AUDIO
+ if(control_mq!=(mqd_t)-1){mq_close(control_mq);mq_unlink("/focusmate_ui");control_mq=(mqd_t)-1;}
+#endif
+#ifdef CONFIG_FOCUSMATE_REMINDER
+ reminder_close();if(reminder_mq!=(mqd_t)-1){mq_close(reminder_mq);mq_unlink(FM_REMINDER_QUEUE);reminder_mq=(mqd_t)-1;}
+#endif
  voice_stop_cancel();save();if(buttons_fd>=0)close(buttons_fd);lv_nuttx_deinit(&display_resources);return 0;
 }

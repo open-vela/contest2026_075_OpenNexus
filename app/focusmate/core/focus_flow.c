@@ -4,8 +4,8 @@
 #include <stdlib.h>
 static void copy(char *d, const char *s, size_t n) { snprintf(d,n,"%s",s); }
 const char *flow_page_name(flow_page p) {
- static const char *names[]={"standby","welcome","list","add","recording","confirm-task","prepare","wait-phone","running","paused","end","review","review-more","help","summary","pause-menu","detail","note"};
- return p>=P_STANDBY && p<=P_NOTE?names[p]:"invalid";
+ static const char *names[]={"standby","welcome","list","add","recording","confirm-task","prepare","wait-phone","running","paused","end","review","review-more","help","summary","pause-menu","detail","note","voice-ready"};
+ return p>=P_STANDBY && p<=P_VOICE_READY?names[p]:"invalid";
 }
 const char *flow_title(const focus_flow *f) { return f->selected>=0 && f->selected<f->count?f->tasks[f->selected].title:"暂无行动"; }
 static void list(focus_flow *f) {
@@ -38,7 +38,19 @@ static void normalize(focus_flow *f) {
  if(*p) memmove(f->draft,p,strlen(p)+1);
 }
 void flow_phone(focus_flow *f, bool present) {
- if(!f->phone_known || f->phone_raw!=present) { f->phone_raw=present; f->debounce_ms=650; }
+ if(f->phone_raw!=present || (!f->phone_known && !f->debounce_ms)) { f->phone_raw=present; f->debounce_ms=650; }
+}
+void flow_phone_unavailable(focus_flow *f) {
+ f->phone_known=false; f->phone_raw=false; f->phone_stable=false; f->debounce_ms=0;
+ f->phone_pause=false;
+ if(f->page==P_RUNNING){f->page=P_PAUSED;f->interruptions++;}
+ copy(f->notice,"手机检测异常，请检查连接后手动继续",sizeof(f->notice));
+}
+void flow_capture_done(focus_flow *f, bool signal) {
+ if(f->page!=P_RECORD)return;
+ f->draft[0]=0;f->heard=signal;
+ if(signal){f->page=P_VOICE_READY;f->notice[0]=0;}
+ else {f->page=P_ADD;copy(f->notice,"未收到声音，请重试",sizeof(f->notice));}
 }
 void flow_poll(focus_flow *f, unsigned ms) {
  if(!f->debounce_ms)return;

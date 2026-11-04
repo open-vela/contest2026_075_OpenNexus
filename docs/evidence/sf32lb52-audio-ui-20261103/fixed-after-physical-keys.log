@@ -1,0 +1,5 @@
+
+nsh> [Kfocusmate_ctl status
+nsh> [K[pixel-status] page=standby tasks=3 selected=-1 remaining=1500 seconds=0 total=0 phone=1/0 pause=manual voice=real
+focusmate_ctl audio-status
+[pcm-client] active=0 playing=0 ready=1 signal=1 bytes=784384 ms=24512 peak=4286 mean=34 error=0 limit=0

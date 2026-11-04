@@ -1,0 +1,28 @@
+diff --git a/chips/sf32lb52/Kconfig b/chips/sf32lb52/Kconfig
+index 11fa808..b91815e 100644
+--- a/chips/sf32lb52/Kconfig
++++ b/chips/sf32lb52/Kconfig
+@@ -27,13 +27,21 @@ config ARCH_CHIP_SF32LB52
+ 	select ARMV8M_HAVE_ICACHE
+ 	select ARMV8M_HAVE_DCACHE
+ 	select ARMV8M_ICACHE
+-	select ARMV8M_DCACHE
++	select ARMV8M_DCACHE if !SF32LB52_DCACHE_BOOT_DISABLED
+ 	select ARCH_ICACHE
+-	select ARCH_DCACHE
++	select ARCH_DCACHE if !SF32LB52_DCACHE_BOOT_DISABLED
+ 	select BF0_HCPU
+ 
+ endchoice
+ 
++config SF32LB52_DCACHE_BOOT_DISABLED
++        bool "Diagnostic: boot without D-cache (shared mailbox bring-up)"
++        default n
++        help
++                Keep instruction cache enabled, but do not enable data cache.
++                Diagnostic profile until shared CPU/DMA memory is coherent.
++                Lower performance is expected. No runtime cache transition.
++
+ menu "On-chip Peripheral RTOS Drivers"
+ 
+     menuconfig BSP_USING_GPIO
